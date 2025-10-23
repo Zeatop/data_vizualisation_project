@@ -1,0 +1,14 @@
+# Environnements Python
+.venv/
+venv/
+__pycache__/
+
+# Configuration locale
+.env
+
+# Données brutes
+data/
+*.csv
+
+# Notebooks temporaires
+*.ipynb_checkpoints/

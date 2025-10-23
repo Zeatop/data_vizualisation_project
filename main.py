@@ -1,10 +1,13 @@
 import os
+from dotenv import load_dotenv
 import pandas
 from models import DataPreparation
 
 # Définir le répertoire de travail actuel (dossier du projet)
-project_dir = os.getcwd()
-table_path = os.path.join(project_dir, "antibiotics_multi_resistance.csv")
+load_dotenv()
+# project_dir = os.getenv("PROJECT_DIR")
+data_raw_dir = os.getenv("DATA_RAW_DIR")
+table_path = os.path.join(data_raw_dir, "antibiotics_multi_resistance.csv")
 
 print(table_path)
 table = pandas.read_csv(table_path, delimiter=',')
