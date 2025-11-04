@@ -95,105 +95,18 @@ class DataPreparation():
         return data
 
     @staticmethod
-    def prepare_location_data(data):
-        data['City'] = ''
-        data['State'] = ''
-        for i, row in data.iterrows():
-            location = row['Address']
-            state = location.split(' ')[-2]
-            if location.split(' ')[-4].replace(',', '').isnumeric():
-                city = location.split(' ')[-3]
-            else:
-                city = (f"{location.split(' ')[-4]} {location.split(' ')[-3]}")
-            
-            # Assigner les valeurs aux bonnes lignes du DataFrame
-            data.at[i, 'State'] = state
-            data.at[i, 'City'] = city.replace(',', '')
+    def add_booleanize_delays(data):
+        delay_columns = ['carrier_delay_min', 
+                         'weather_delay_min', 'traffic_delay_min', 
+                         'security_delay_min', 'late_aircraft_delay_min']
         
-        return data
-    
-    @staticmethod
-    def prepare_age_and_gender_data(data):
-        data['Age'] = ''
-        data['Gender'] = ''
-        for i, row in data.iterrows():
-            age_gender = row['age/gender']
-            try:
-                age_gender = age_gender.split('/')
-                age = age_gender[0]
-                gender = age_gender[1]
-            except Exception as e:
-                age = "NA"
-                gender = "NA"
-                continue
-            
+        booleanized_delay_columns = ['bool_carrier_delay_min', 
+                                     'bool_weather_delay_min', 'bool_traffic_delay_min', 
+                                     'bool_security_delay_min', 'bool_late_aircraft_delay_min']
         
-            # Assigner les valeurs aux bonnes lignes du DataFrame
-            data.at[i, 'Age'] = age
-            data.at[i, 'Gender'] = gender
-        
-        return data
-    
-    @staticmethod
-    def analyze_city_data(data):
-        print("=== ANALYSE DES DONNÉES CITY ===")
-        
-        # 1. Compter les valeurs uniques
-        print(f"\nNombre total de villes: {data['City'].nunique()}")
-        print(f"Nombre total de lignes: {len(data)}")
-        
-        # 2. Afficher toutes les valeurs uniques
-        print(f"\nToutes les villes uniques:")
-        unique_cities = data['City'].unique()
-        for i, city in enumerate(sorted(unique_cities)):
-            print(f"{i+1:2d}. '{city}'")
-        
-        # 3. Détecter les valeurs vides ou nulles
-        empty_cities = data[data['City'].isin(['', 'NA']) | data['City'].isna()]
-        if not empty_cities.empty:
-            print(f"\n⚠️  {len(empty_cities)} lignes avec des villes vides:")
-            print(empty_cities[['Address', 'City']].head())
-        
-        # 4. Détecter les villes avec des caractères bizarres
-        print(f"\n🔍 Villes avec des caractères suspects:")
-        suspicious_cities = []
-        for city in unique_cities:
-            if city:  # Si pas vide
-                # Vérifier les caractères numériques
-                if any(char.isdigit() for char in city):
-                    suspicious_cities.append(f"'{city}' (contient des chiffres)")
-                # Vérifier les caractères spéciaux
-                if any(char in city for char in ['@', '#', '$', '%', '&', '*']):
-                    suspicious_cities.append(f"'{city}' (caractères spéciaux)")
-                # Vérifier les longueurs anormales
-                if len(city) <= 2:
-                    suspicious_cities.append(f"'{city}' (trop court)")
-                if len(city) > 30:
-                    suspicious_cities.append(f"'{city}' (trop long)")
-        
-        for suspicious in suspicious_cities:
-            print(f"  - {suspicious}")
-        
-        # 5. Compter les occurrences de chaque ville
-        print(f"\n📊 Fréquence des villes:")
-        city_counts = data['City'].value_counts()
-        print(city_counts.head(10))
-        
-        # 6. Afficher quelques exemples d'adresses originales pour comparaison
-        print(f"\n📍 Exemples d'adresses originales vs villes extraites:")
-        sample_data = data[['Address', 'City']].head(5)
-        for _, row in sample_data.iterrows():
-            print(f"  Adresse: {row['Address']}")
-            print(f"  Ville extraite: '{row['City']}'")
-            print()
-        
-        return data
-
-    @staticmethod
-    def delete_useless_columns(data, columns_to_delete):
-        for column in columns_to_delete:
+        for i, column in enumerate(delay_columns):
             if column in data.columns:
-                data = data.drop(columns=column, axis='columns')
-        print("Colonnes après suppression:")
-        print(data.head())
+                data[booleanized_delay_columns[i]] = data[column].apply(lambda x: True if x > 0 else False)
+        print("Colonnes après booleanisation des retards:")
+        print(data[booleanized_delay_columns].head())
         return data

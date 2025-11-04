@@ -14,6 +14,7 @@ print(table.head())
 # Créer une instance de DataPreparation
 data_prep = DataPreparation()
 table = data_prep.rename_columns(data=table)
+table = data_prep.add_booleanize_delays(data=table)
 # save data after renaming
 renamed_path = os.path.join(project_dir, "flightData/flight_data_2024_sample_renamed.csv")
 table.to_csv(renamed_path, index=False)
