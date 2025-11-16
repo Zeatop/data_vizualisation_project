@@ -96,14 +96,15 @@ class DataPreparation():
 
     @staticmethod
     def add_booleanize_delays(data):
-        delay_columns = ['carrier_delay_min', 
+        delay_columns = ['dep_delay_min', 'arr_delay_min', 'carrier_delay_min', 
                          'weather_delay_min', 'traffic_delay_min', 
                          'security_delay_min', 'late_aircraft_delay_min']
-        
-        booleanized_delay_columns = ['bool_carrier_delay_min', 
-                                     'bool_weather_delay_min', 'bool_traffic_delay_min', 
-                                     'bool_security_delay_min', 'bool_late_aircraft_delay_min']
-        
+
+        booleanized_delay_columns = ['bool_dep_delay_min', 'bool_arr_delay_min', 'bool_carrier_delay_min', 
+                                     'bool_weather_delay_min', 'bool_traffic_delay_min',
+                                     'bool_security_delay_min', 'bool_late_aircraft_delay_min',]
+
+        data['is_late'] = data['arr_delay_min'].apply(lambda x: True if x > 0 else False)
         for i, column in enumerate(delay_columns):
             if column in data.columns:
                 data[booleanized_delay_columns[i]] = data[column].apply(lambda x: True if x > 0 else False)
