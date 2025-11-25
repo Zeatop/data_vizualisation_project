@@ -127,10 +127,10 @@ class DataPreparation():
                                      'bool_weather_delay_min', 'bool_traffic_delay_min',
                                      'bool_security_delay_min', 'bool_late_aircraft_delay_min',]
 
-        data['is_late'] = data['arr_delay_min'].apply(lambda x: True if x > 0 else False)
+        data['is_late'] = data['arr_delay_min'].apply(lambda x: True if x > 15 else False)
         for i, column in enumerate(delay_columns):
             if column in data.columns:
-                data[booleanized_delay_columns[i]] = data[column].apply(lambda x: True if x > 0 else False)
+                data[booleanized_delay_columns[i]] = data[column].apply(lambda x: True if x > 15 else False)
         print("Colonnes après booleanisation des retards:")
         print(data[booleanized_delay_columns].head())
         return data

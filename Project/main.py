@@ -27,7 +27,8 @@ cities_states = pandas.concat([
 # Sauvegarder la liste des villes
 cities_states.to_csv("flightData/cities_states_list.csv", index=False)
 print(f"Liste des villes sauvegardée : {len(cities_states)} villes uniques")
-exit(0)
+
+
 table = data_prep.rename_columns(data=table)
 table = data_prep.add_carrier_name(data=table)
 table = data_prep.add_booleanize_delays(data=table)
@@ -80,14 +81,18 @@ agregated_data = data_prep.agregate_data(
 # Agréger les données par type de retard et par compagnie aérienne
 agregated_data = data_prep.agregate_data(
     data=table,
-    group_by_columns=['bool_carrier_delay_min', 'bool_weather_delay_min',
-                      'bool_traffic_delay_min', 'bool_security_delay_min', 'bool_late_aircraft_delay_min', 'carrier_name'],
+    group_by_columns=['carrier_name'],
     agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
         'is_late': 'sum',
         'cancelled': 'sum',
         'flight_number': 'count'
     },
-    filepath="flightData/dataKadija/aggregated_by_late_type_and_route.csv"
+    filepath="flightData/dataKadija/aggregated_by_late_type_and_carrier.csv"
 )
 
 ### Agrégations pour Delphine ###
@@ -119,10 +124,13 @@ agregated_data = data_prep.agregate_data(
 # Agréger les données par type de retard et par catégorie de distance
 agregated_data = data_prep.agregate_data(
     data=table,
-    group_by_columns=['bool_carrier_delay_min', 'bool_weather_delay_min',
-                      'bool_traffic_delay_min', 'bool_security_delay_min', 
-                      'bool_late_aircraft_delay_min', 'distance_category'],
+    group_by_columns=['distance_category'],
     agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
         'is_late': 'sum',
         'cancelled': 'sum',
         'flight_number': 'count'
@@ -137,6 +145,11 @@ agregated_data = data_prep.agregate_data(
     data=table,
     group_by_columns=['week_number', 'origin_city'],
     agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
         'is_late': 'sum',
         'cancelled': 'sum',
         'flight_number': 'count'
@@ -149,6 +162,11 @@ agregated_data = data_prep.agregate_data(
     data=table,
     group_by_columns=['month', 'origin_city'],
     agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
         'is_late': 'sum',
         'cancelled': 'sum',
         'flight_number': 'count'
@@ -156,19 +174,6 @@ agregated_data = data_prep.agregate_data(
     filepath="flightData/dataLeo/aggregated_by_month_and_origin_city.csv"
 )
 
-# Agréger les données par type de retard et par ville d'origine
-agregated_data = data_prep.agregate_data(
-    data=table,
-    group_by_columns=['bool_carrier_delay_min', 'bool_weather_delay_min',
-                      'bool_traffic_delay_min', 'bool_security_delay_min', 
-                      'bool_late_aircraft_delay_min', 'origin_city'],
-    agg_dict={
-        'is_late': 'sum',
-        'cancelled': 'sum',
-        'flight_number': 'count'
-    },
-    filepath="flightData/dataLeo/aggregated_by_late_type_and_origin_city.csv"
-)
 
 
 # Agréger les données par semaine et par ville d'arrivée
@@ -176,6 +181,11 @@ agregated_data = data_prep.agregate_data(
     data=table,
     group_by_columns=['week_number', 'dest_city'],
     agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
         'is_late': 'sum',
         'cancelled': 'sum',
         'flight_number': 'count'
@@ -188,6 +198,11 @@ agregated_data = data_prep.agregate_data(
     data=table,
     group_by_columns=['month', 'dest_city'],
     agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
         'is_late': 'sum',
         'cancelled': 'sum',
         'flight_number': 'count'
@@ -195,19 +210,6 @@ agregated_data = data_prep.agregate_data(
     filepath="flightData/dataLeo/aggregated_by_month_and_dest_city.csv"
 )
 
-# Agréger les données par type de retard et par ville d'arrivée
-agregated_data = data_prep.agregate_data(
-    data=table,
-    group_by_columns=['bool_carrier_delay_min', 'bool_weather_delay_min',
-                      'bool_traffic_delay_min', 'bool_security_delay_min', 
-                      'bool_late_aircraft_delay_min', 'dest_city'],
-    agg_dict={
-        'is_late': 'sum',
-        'cancelled': 'sum',
-        'flight_number': 'count'
-    },
-    filepath="flightData/dataLeo/aggregated_by_late_type_and_dest_city.csv"
-)
 
 ### Agrégations pour Credo ###
 
@@ -238,10 +240,13 @@ agregated_data = data_prep.agregate_data(
 # Agréger les données par type de retard et par itinéraire
 agregated_data = data_prep.agregate_data(
     data=table,
-    group_by_columns=['bool_carrier_delay_min', 'bool_weather_delay_min',
-                      'bool_traffic_delay_min', 'bool_security_delay_min', 
-                      'bool_late_aircraft_delay_min', 'origin_city', 'dest_city'],
+    group_by_columns=['origin_city', 'dest_city'],
     agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
         'is_late': 'sum',
         'cancelled': 'sum',
         'flight_number': 'count'
