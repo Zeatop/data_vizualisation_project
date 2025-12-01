@@ -354,12 +354,13 @@ function drawStreamchart(selectedCity, viewMode = "count", timePeriod = "month",
     .keys(dataKeys)
     (data);
   
-  // Calculate Y domain based on actual data
+  // Calculate Y domain based on actual data with padding
   const yExtent = d3.extent(tempStackedData.flat(2));
+  const yPadding = (yExtent[1] - yExtent[0]) * 0.3; // 30% padding
   
   // Add Y axis
   const y = d3.scaleLinear()
-    .domain(yExtent)
+    .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
     .range([ height, 0 ]);
 
   // color palette
