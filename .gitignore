@@ -4,3 +4,5 @@ flightData/flight_data_2024_renamed.csv
 env/
 __pycache__/
 Cours/
+node_modules
+.idea

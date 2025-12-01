@@ -6,7 +6,7 @@ import kagglehub
 # Définir le répertoire de travail actuel (dossier du projet)
 project_dir = os.getcwd()
 sample_table_path = os.path.join(project_dir, "flightData/flight_data_2024_sample.csv")
-table_path = os.path.join(project_dir, "flightData/flight_data_2024.csv")
+table_path = os.path.join(project_dir, "flightData/flight_data_2024_sample.csv")
 
 sample_table = pandas.read_csv(sample_table_path, delimiter=',')
 table = pandas.read_csv(table_path, delimiter=',')
