@@ -462,10 +462,10 @@ function drawStreamchart(selectedCity, viewMode = "count", timePeriod = "month",
 
 // Charger les quatre datasets CSV
 Promise.all([
-  d3.csv("../flightData/dataLeo/aggregated_by_month_and_origin_city.csv"),
-  d3.csv("../flightData/dataLeo/aggregated_by_week_and_origin_city.csv"),
-  d3.csv("../flightData/dataLeo/aggregated_by_month_and_dest_city.csv"),
-  d3.csv("../flightData/dataLeo/aggregated_by_week_and_dest_city.csv")
+  d3.csv("../../flightData/dataLeo/aggregated_by_month_and_origin_city.csv"),
+  d3.csv("../../flightData/dataLeo/aggregated_by_week_and_origin_city.csv"),
+  d3.csv("../../flightData/dataLeo/aggregated_by_month_and_dest_city.csv"),
+  d3.csv("../../flightData/dataLeo/aggregated_by_week_and_dest_city.csv")
 ]).then(function([dataMonthOrigin, dataWeekOrigin, dataMonthDest, dataWeekDest]) {
   allDataMonthOrigin = dataMonthOrigin;
   allDataWeekOrigin = dataWeekOrigin;
