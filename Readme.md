@@ -9,10 +9,10 @@ lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lo
 
 - Installation des dépendances
 
-> Se positionner sur le répertoire **processing** en s'assurant d'être dans un environnement python puis executer la commande suivante
+> Se positionner dans le répertoire racine en s'assurant d'être dans un environnement python puis executer la commande suivante
 
 ```shell
-    cd processing && pip install -r ./processing/main.py
+    pip install -r requirements.txt
 ```
 
 > Ensuite executer cette commande pour installer les jeux de données datasets
