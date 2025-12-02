@@ -69,10 +69,10 @@ const state = {
 // 5. LOAD DATA
 const files = [
     "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
-    "data/us_cities_from_csv.geojson",
-    "../../FlightData/dataCredo/aggregated_by_month_and_route.csv",
-    "../../FlightData/dataCredo/aggregated_by_week_and_route.csv",
-    "../../FlightData/dataCredo/aggregated_by_late_type_and_route.csv"
+    "../../citiesData/us_cities_from_csv.geojson",
+    "../../flightData/dataCredo/aggregated_by_month_and_route.csv",
+    "../../flightData/dataCredo/aggregated_by_week_and_route.csv",
+    "../../flightData/dataCredo/aggregated_by_late_type_and_route.csv"
 ];
 
 Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))

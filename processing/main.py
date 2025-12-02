@@ -8,7 +8,7 @@ project_dir = os.getcwd()
 
 folder_list = []
 # Specify your desired folder
-data_folder = "../FlightData"
+data_folder = "../flightData"
 folder_list.append(data_folder)
 
 #folders for each persons
