@@ -1,4 +1,4 @@
-import dowloand_dataset as dl_ds
+import download_dataset as dl_ds
 import os
 import pandas
 from models import DataPreparation
