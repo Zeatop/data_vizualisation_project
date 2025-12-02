@@ -4,4 +4,4 @@ node_modules
 __pycache__
 flightData/*2024.csv
 flightData/*2024*renamed.csv
-./Cours/*
+Cours/
