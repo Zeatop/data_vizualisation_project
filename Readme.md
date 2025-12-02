@@ -23,13 +23,6 @@ lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lo
 
 - Démarrer le projet
 
-> Revenir au répertoire parent et installer les dépendances 
-
 ```shell
-    cd .. && npm install
-```
-
-> Lancement du projet
-```shell
-    npm run start
+    py -m http.server 8000
 ```
