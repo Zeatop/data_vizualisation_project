@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+
+	<!-- import the d3 library -->
+	<!-- <script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script> -->
+    <script type='text/javascript' src='lib/d3.v5.min.js'></script>
+
+	<!-- style sheet -->
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+	<svg id="scene">
+        <g id='links'></g>
+        <g id='labels'></g>
+        <g id='nodes'></g>
+    </svg>
+    
+
+    <script>
+        
+
+        // Charger les données et créer la visualisation une fois les données chargées
+        d3.json("data.json").then(data => {
+
+            let width = 960,
+            height = 810,
+            margin = { left: 100, top: 100, bottom: 100, right: 100 }, // the margins of the chart
+            svg = d3.select('#scene')
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom);
+
+            console.log(data);
+            
+            let persons = data["persons"];
+            let links = data["links"];
+            let familyLinks = data["family-links"];
+
+            let xScale = d3.scaleLinear()
+                .domain([0, d3.max(persons, d => d.position.x)])
+                .range([margin.left, width]);
+
+            let yScale = d3.scaleLinear()
+                .domain([0, d3.max(persons, d => d.position.y)])
+                .range([margin.top, height]);
+
+            svg.selectAll('circle')
+                .data(persons)
+                .enter()
+                .append('circle') // create a circle in the svg
+                    .attr("stroke-width", 2) // with attributes ...
+                    .attr("cx", d => xScale(d.position.x))
+                    .attr("cy", d => yScale(d.position.y))
+                    .attr('stroke', 'black')
+                    .attr("r", d => 15)
+                    .attr('fill', 'green')
+
+            let labelGroup = svg.selectAll('g.person')
+                .data(persons)
+                .enter()
+                .append('g')
+                    .attr('class', 'person')
+                    .attr('transform', d => `translate(${xScale(d.position.x) + 7}, ${yScale(d.position.y)})`)
+
+            labelGroup.append('rect')
+                    .attr('width', d => d.name.length * 10 + 5)
+                    .attr('stroke-width', 2)
+                    .attr('stroke', 'black')
+                    .attr('height', 25)
+                    .attr('fill', 'white')
+
+            labelGroup.append('text')
+                    .text(d => d.name)
+                    .attr('y', 13)
+                    .attr('x', d => d.name.length * 10 + 2)
+                    .attr('fill', 'black')
+                    .attr('text-anchor', 'end')
+                    .attr("font-size", ".8em")
+            
+            labelGroup.append('text')
+                    .text(d => `${d.role}, ${d.alibi}`)
+                    .attr('y', 22)
+                    .attr('x', d => d.name.length * 10 + 2)
+                    .attr('fill', 'red')
+                    .attr('text-anchor', 'end')
+                    .attr("font-size", ".8em")
+
+            let lineGenerator = d3.line()
+                .x(d => xScale(familyLinks.source))
+                .y(d => yScale(familyLinks.target))
+            
+            let personsByName = {};
+            persons.forEach(p => personsByName[p.name] = p);
+
+            svg.selectAll('line.family-link')  // Sélectionner toutes les lignes (même si elles n'existent pas encore)
+               .data(familyLinks)   // Lier chaque élément du tableau familyLinks à une future ligne
+               .enter()      // Pour chaque donnée sans élément DOM correspondant
+               .append('line') // Créer une ligne SVG
+               .attr('class', 'family-link')
+               .attr('x1', d => xScale(personsByName[d.source].position.x))
+               .attr('y1', d => yScale(personsByName[d.source].position.y))
+               .attr('x2', d => xScale(personsByName[d.target].position.x))
+               .attr('y2', d => yScale(personsByName[d.target].position.y))
+               .attr('stroke', 'blue')
+               .attr('stroke-width', 2)
+
+            svg.selectAll('line.link')  // Sélectionner toutes les lignes (même si elles n'existent pas encore)
+               .data(links)   // Lier chaque élément du tableau familyLinks à une future ligne
+               .enter()      // Pour chaque donnée sans élément DOM correspondant
+               .append('line') // Créer une ligne SVG
+               .attr('class', 'link')
+               .attr('x1', d => xScale(personsByName[d.source].position.x))
+               .attr('y1', d => yScale(personsByName[d.source].position.y))
+               .attr('x2', d => xScale(personsByName[d.target].position.x))
+               .attr('y2', d => yScale(personsByName[d.target].position.y))
+               .attr('stroke', 'green')
+               .attr('stroke-width', 2)
+        })
+
+    </script>
+
+</body>
+</html>

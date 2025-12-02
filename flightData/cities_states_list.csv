@@ -1,0 +1,343 @@
+city,state
+"Birmingham, AL",Alabama
+"Dothan, AL",Alabama
+"Huntsville, AL",Alabama
+"Mobile, AL",Alabama
+"Montgomery, AL",Alabama
+"Adak Island, AK",Alaska
+"Anchorage, AK",Alaska
+"Barrow, AK",Alaska
+"Bethel, AK",Alaska
+"Cordova, AK",Alaska
+"Deadhorse, AK",Alaska
+"Dillingham, AK",Alaska
+"Fairbanks, AK",Alaska
+"Gustavus, AK",Alaska
+"Juneau, AK",Alaska
+"Ketchikan, AK",Alaska
+"King Salmon, AK",Alaska
+"Kodiak, AK",Alaska
+"Kotzebue, AK",Alaska
+"Nome, AK",Alaska
+"Petersburg, AK",Alaska
+"Sitka, AK",Alaska
+"Wrangell, AK",Alaska
+"Yakutat, AK",Alaska
+"Flagstaff, AZ",Arizona
+"Phoenix, AZ",Arizona
+"Prescott, AZ",Arizona
+"Tucson, AZ",Arizona
+"Yuma, AZ",Arizona
+"Fayetteville, AR",Arkansas
+"Fort Smith, AR",Arkansas
+"Little Rock, AR",Arkansas
+"Texarkana, AR",Arkansas
+"Arcata/Eureka, CA",California
+"Bakersfield, CA",California
+"Bishop, CA",California
+"Burbank, CA",California
+"Fresno, CA",California
+"Long Beach, CA",California
+"Los Angeles, CA",California
+"Monterey, CA",California
+"Oakland, CA",California
+"Ontario, CA",California
+"Palm Springs, CA",California
+"Redding, CA",California
+"Sacramento, CA",California
+"San Diego, CA",California
+"San Francisco, CA",California
+"San Jose, CA",California
+"San Luis Obispo, CA",California
+"Santa Ana, CA",California
+"Santa Barbara, CA",California
+"Santa Maria, CA",California
+"Santa Rosa, CA",California
+"Stockton, CA",California
+"Aspen, CO",Colorado
+"Colorado Springs, CO",Colorado
+"Denver, CO",Colorado
+"Durango, CO",Colorado
+"Eagle, CO",Colorado
+"Grand Junction, CO",Colorado
+"Gunnison, CO",Colorado
+"Hayden, CO",Colorado
+"Montrose/Delta, CO",Colorado
+"Hartford, CT",Connecticut
+"Daytona Beach, FL",Florida
+"Fort Lauderdale, FL",Florida
+"Fort Myers, FL",Florida
+"Gainesville, FL",Florida
+"Jacksonville, FL",Florida
+"Key West, FL",Florida
+"Melbourne, FL",Florida
+"Miami, FL",Florida
+"Orlando, FL",Florida
+"Panama City, FL",Florida
+"Pensacola, FL",Florida
+"Punta Gorda, FL",Florida
+"Sanford, FL",Florida
+"Sarasota/Bradenton, FL",Florida
+"St. Petersburg, FL",Florida
+"Tallahassee, FL",Florida
+"Tampa, FL",Florida
+"Valparaiso, FL",Florida
+"West Palm Beach/Palm Beach, FL",Florida
+"Albany, GA",Georgia
+"Atlanta, GA",Georgia
+"Augusta, GA",Georgia
+"Brunswick, GA",Georgia
+"Columbus, GA",Georgia
+"Savannah, GA",Georgia
+"Valdosta, GA",Georgia
+"Hilo, HI",Hawaii
+"Honolulu, HI",Hawaii
+"Kahului, HI",Hawaii
+"Kona, HI",Hawaii
+"Lihue, HI",Hawaii
+"Boise, ID",Idaho
+"Idaho Falls, ID",Idaho
+"Lewiston, ID",Idaho
+"Pocatello, ID",Idaho
+"Sun Valley/Hailey/Ketchum, ID",Idaho
+"Twin Falls, ID",Idaho
+"Belleville, IL",Illinois
+"Bloomington/Normal, IL",Illinois
+"Champaign/Urbana, IL",Illinois
+"Chicago, IL",Illinois
+"Decatur, IL",Illinois
+"Moline, IL",Illinois
+"Peoria, IL",Illinois
+"Rockford, IL",Illinois
+"Springfield, IL",Illinois
+"Evansville, IN",Indiana
+"Fort Wayne, IN",Indiana
+"Indianapolis, IN",Indiana
+"South Bend, IN",Indiana
+"Cedar Rapids/Iowa City, IA",Iowa
+"Des Moines, IA",Iowa
+"Fort Dodge, IA",Iowa
+"Mason City, IA",Iowa
+"Sioux City, IA",Iowa
+"Dodge City, KS",Kansas
+"Garden City, KS",Kansas
+"Hays, KS",Kansas
+"Liberal, KS",Kansas
+"Manhattan/Ft. Riley, KS",Kansas
+"Salina, KS",Kansas
+"Wichita, KS",Kansas
+"Cincinnati, OH",Kentucky
+"Lexington, KY",Kentucky
+"Louisville, KY",Kentucky
+"Alexandria, LA",Louisiana
+"Baton Rouge, LA",Louisiana
+"Lafayette, LA",Louisiana
+"Lake Charles, LA",Louisiana
+"Monroe, LA",Louisiana
+"New Orleans, LA",Louisiana
+"Shreveport, LA",Louisiana
+"Bangor, ME",Maine
+"Portland, ME",Maine
+"Presque Isle/Houlton, ME",Maine
+"Baltimore, MD",Maryland
+"Hagerstown, MD",Maryland
+"Boston, MA",Massachusetts
+"Hyannis, MA",Massachusetts
+"Martha's Vineyard, MA",Massachusetts
+"Nantucket, MA",Massachusetts
+"Worcester, MA",Massachusetts
+"Alpena, MI",Michigan
+"Detroit, MI",Michigan
+"Escanaba, MI",Michigan
+"Flint, MI",Michigan
+"Grand Rapids, MI",Michigan
+"Hancock/Houghton, MI",Michigan
+"Iron Mountain/Kingsfd, MI",Michigan
+"Kalamazoo, MI",Michigan
+"Lansing, MI",Michigan
+"Marquette, MI",Michigan
+"Pellston, MI",Michigan
+"Saginaw/Bay City/Midland, MI",Michigan
+"Sault Ste. Marie, MI",Michigan
+"Traverse City, MI",Michigan
+"Bemidji, MN",Minnesota
+"Brainerd, MN",Minnesota
+"Duluth, MN",Minnesota
+"Hibbing, MN",Minnesota
+"International Falls, MN",Minnesota
+"Minneapolis, MN",Minnesota
+"Rochester, MN",Minnesota
+"St. Cloud, MN",Minnesota
+"Columbus, MS",Mississippi
+"Gulfport/Biloxi, MS",Mississippi
+"Hattiesburg/Laurel, MS",Mississippi
+"Jackson/Vicksburg, MS",Mississippi
+"Meridian, MS",Mississippi
+"Columbia, MO",Missouri
+"Joplin, MO",Missouri
+"Kansas City, MO",Missouri
+"Springfield, MO",Missouri
+"St. Louis, MO",Missouri
+"Billings, MT",Montana
+"Bozeman, MT",Montana
+"Butte, MT",Montana
+"Great Falls, MT",Montana
+"Helena, MT",Montana
+"Kalispell, MT",Montana
+"Missoula, MT",Montana
+"West Yellowstone, MT",Montana
+"Grand Island, NE",Nebraska
+"Kearney, NE",Nebraska
+"Lincoln, NE",Nebraska
+"North Platte, NE",Nebraska
+"Omaha, NE",Nebraska
+"Scottsbluff, NE",Nebraska
+"Elko, NV",Nevada
+"Las Vegas, NV",Nevada
+"Reno, NV",Nevada
+"Manchester, NH",New Hampshire
+"Portsmouth, NH",New Hampshire
+"Atlantic City, NJ",New Jersey
+"Newark, NJ",New Jersey
+"Trenton, NJ",New Jersey
+"Albuquerque, NM",New Mexico
+"Hobbs, NM",New Mexico
+"Roswell, NM",New Mexico
+"Santa Fe, NM",New Mexico
+"Albany, NY",New York
+"Binghamton, NY",New York
+"Buffalo, NY",New York
+"Elmira/Corning, NY",New York
+"Islip, NY",New York
+"Ithaca/Cortland, NY",New York
+"New York, NY",New York
+"Newburgh/Poughkeepsie, NY",New York
+"Niagara Falls, NY",New York
+"Plattsburgh, NY",New York
+"Rochester, NY",New York
+"Syracuse, NY",New York
+"White Plains, NY",New York
+"Asheville, NC",North Carolina
+"Charlotte, NC",North Carolina
+"Concord, NC",North Carolina
+"Fayetteville, NC",North Carolina
+"Greensboro/High Point, NC",North Carolina
+"Jacksonville/Camp Lejeune, NC",North Carolina
+"New Bern/Morehead/Beaufort, NC",North Carolina
+"Raleigh/Durham, NC",North Carolina
+"Wilmington, NC",North Carolina
+"Bismarck/Mandan, ND",North Dakota
+"Devils Lake, ND",North Dakota
+"Dickinson, ND",North Dakota
+"Fargo, ND",North Dakota
+"Grand Forks, ND",North Dakota
+"Jamestown, ND",North Dakota
+"Minot, ND",North Dakota
+"Williston, ND",North Dakota
+"Akron, OH",Ohio
+"Cleveland, OH",Ohio
+"Columbus, OH",Ohio
+"Dayton, OH",Ohio
+"Toledo, OH",Ohio
+"Lawton/Fort Sill, OK",Oklahoma
+"Oklahoma City, OK",Oklahoma
+"Stillwater, OK",Oklahoma
+"Tulsa, OK",Oklahoma
+"Bend/Redmond, OR",Oregon
+"Eugene, OR",Oregon
+"Medford, OR",Oregon
+"North Bend/Coos Bay, OR",Oregon
+"Portland, OR",Oregon
+"Allentown/Bethlehem/Easton, PA",Pennsylvania
+"Harrisburg, PA",Pennsylvania
+"Johnstown, PA",Pennsylvania
+"Latrobe, PA",Pennsylvania
+"Philadelphia, PA",Pennsylvania
+"Pittsburgh, PA",Pennsylvania
+"Scranton/Wilkes-Barre, PA",Pennsylvania
+"State College, PA",Pennsylvania
+"Aguadilla, PR",Puerto Rico
+"Ponce, PR",Puerto Rico
+"San Juan, PR",Puerto Rico
+"Providence, RI",Rhode Island
+"Charleston, SC",South Carolina
+"Columbia, SC",South Carolina
+"Greer, SC",South Carolina
+"Hilton Head, SC",South Carolina
+"Myrtle Beach, SC",South Carolina
+"Aberdeen, SD",South Dakota
+"Rapid City, SD",South Dakota
+"Sioux Falls, SD",South Dakota
+"Bristol/Johnson City/Kingsport, TN",Tennessee
+"Chattanooga, TN",Tennessee
+"Knoxville, TN",Tennessee
+"Memphis, TN",Tennessee
+"Nashville, TN",Tennessee
+"Abilene, TX",Texas
+"Amarillo, TX",Texas
+"Austin, TX",Texas
+"Beaumont/Port Arthur, TX",Texas
+"Brownsville, TX",Texas
+"College Station/Bryan, TX",Texas
+"Corpus Christi, TX",Texas
+"Dallas, TX",Texas
+"Dallas/Fort Worth, TX",Texas
+"El Paso, TX",Texas
+"Harlingen/San Benito, TX",Texas
+"Houston, TX",Texas
+"Killeen, TX",Texas
+"Laredo, TX",Texas
+"Longview, TX",Texas
+"Lubbock, TX",Texas
+"Midland/Odessa, TX",Texas
+"Mission/McAllen/Edinburg, TX",Texas
+"San Angelo, TX",Texas
+"San Antonio, TX",Texas
+"Tyler, TX",Texas
+"Victoria, TX",Texas
+"Waco, TX",Texas
+"Wichita Falls, TX",Texas
+"Guam, TT",U.S. Pacific Trust Territories and Possessions
+"Pago Pago, TT",U.S. Pacific Trust Territories and Possessions
+"Saipan, TT",U.S. Pacific Trust Territories and Possessions
+"Charlotte Amalie, VI",U.S. Virgin Islands
+"Christiansted, VI",U.S. Virgin Islands
+"Cedar City, UT",Utah
+"Moab, UT",Utah
+"Provo, UT",Utah
+"Salt Lake City, UT",Utah
+"St. George, UT",Utah
+"Vernal, UT",Utah
+"Burlington, VT",Vermont
+"Charlottesville, VA",Virginia
+"Norfolk, VA",Virginia
+"Richmond, VA",Virginia
+"Roanoke, VA",Virginia
+"Washington, DC",Virginia
+"Bellingham, WA",Washington
+"Everett, WA",Washington
+"Pasco/Kennewick/Richland, WA",Washington
+"Seattle, WA",Washington
+"Spokane, WA",Washington
+"Walla Walla, WA",Washington
+"Ashland, WV",West Virginia
+"Charleston/Dunbar, WV",West Virginia
+"Clarksburg/Fairmont, WV",West Virginia
+"Morgantown, WV",West Virginia
+"Appleton, WI",Wisconsin
+"Eau Claire, WI",Wisconsin
+"Green Bay, WI",Wisconsin
+"La Crosse, WI",Wisconsin
+"Madison, WI",Wisconsin
+"Milwaukee, WI",Wisconsin
+"Mosinee, WI",Wisconsin
+"Rhinelander, WI",Wisconsin
+"Casper, WY",Wyoming
+"Cheyenne, WY",Wyoming
+"Cody, WY",Wyoming
+"Gillette, WY",Wyoming
+"Jackson, WY",Wyoming
+"Laramie, WY",Wyoming
+"Riverton/Lander, WY",Wyoming
+"Rock Springs, WY",Wyoming
+"Sheridan, WY",Wyoming
