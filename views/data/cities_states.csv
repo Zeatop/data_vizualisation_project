@@ -15,10 +15,7 @@ city,state
 "Gustavus, AK",Alaska
 "Juneau, AK",Alaska
 "Ketchikan, AK",Alaska
-"King Salmon, AK",Alaska
 "Kodiak, AK",Alaska
-"Kotzebue, AK",Alaska
-"Nome, AK",Alaska
 "Petersburg, AK",Alaska
 "Sitka, AK",Alaska
 "Wrangell, AK",Alaska
@@ -34,7 +31,6 @@ city,state
 "Texarkana, AR",Arkansas
 "Arcata/Eureka, CA",California
 "Bakersfield, CA",California
-"Bishop, CA",California
 "Burbank, CA",California
 "Fresno, CA",California
 "Long Beach, CA",California
@@ -51,7 +47,6 @@ city,state
 "San Luis Obispo, CA",California
 "Santa Ana, CA",California
 "Santa Barbara, CA",California
-"Santa Maria, CA",California
 "Santa Rosa, CA",California
 "Stockton, CA",California
 "Aspen, CO",Colorado
@@ -83,7 +78,6 @@ city,state
 "Tampa, FL",Florida
 "Valparaiso, FL",Florida
 "West Palm Beach/Palm Beach, FL",Florida
-"Albany, GA",Georgia
 "Atlanta, GA",Georgia
 "Augusta, GA",Georgia
 "Brunswick, GA",Georgia
@@ -116,8 +110,6 @@ city,state
 "South Bend, IN",Indiana
 "Cedar Rapids/Iowa City, IA",Iowa
 "Des Moines, IA",Iowa
-"Fort Dodge, IA",Iowa
-"Mason City, IA",Iowa
 "Sioux City, IA",Iowa
 "Dodge City, KS",Kansas
 "Garden City, KS",Kansas
@@ -138,20 +130,15 @@ city,state
 "Shreveport, LA",Louisiana
 "Bangor, ME",Maine
 "Portland, ME",Maine
-"Presque Isle/Houlton, ME",Maine
 "Baltimore, MD",Maryland
 "Hagerstown, MD",Maryland
 "Boston, MA",Massachusetts
-"Hyannis, MA",Massachusetts
 "Martha's Vineyard, MA",Massachusetts
 "Nantucket, MA",Massachusetts
 "Worcester, MA",Massachusetts
-"Alpena, MI",Michigan
 "Detroit, MI",Michigan
-"Escanaba, MI",Michigan
 "Flint, MI",Michigan
 "Grand Rapids, MI",Michigan
-"Hancock/Houghton, MI",Michigan
 "Iron Mountain/Kingsfd, MI",Michigan
 "Kalamazoo, MI",Michigan
 "Lansing, MI",Michigan
@@ -164,23 +151,18 @@ city,state
 "Brainerd, MN",Minnesota
 "Duluth, MN",Minnesota
 "Hibbing, MN",Minnesota
-"International Falls, MN",Minnesota
 "Minneapolis, MN",Minnesota
 "Rochester, MN",Minnesota
-"St. Cloud, MN",Minnesota
 "Columbus, MS",Mississippi
 "Gulfport/Biloxi, MS",Mississippi
-"Hattiesburg/Laurel, MS",Mississippi
 "Jackson/Vicksburg, MS",Mississippi
 "Meridian, MS",Mississippi
 "Columbia, MO",Missouri
-"Joplin, MO",Missouri
 "Kansas City, MO",Missouri
 "Springfield, MO",Missouri
 "St. Louis, MO",Missouri
 "Billings, MT",Montana
 "Bozeman, MT",Montana
-"Butte, MT",Montana
 "Great Falls, MT",Montana
 "Helena, MT",Montana
 "Kalispell, MT",Montana
@@ -192,7 +174,6 @@ city,state
 "North Platte, NE",Nebraska
 "Omaha, NE",Nebraska
 "Scottsbluff, NE",Nebraska
-"Elko, NV",Nevada
 "Las Vegas, NV",Nevada
 "Reno, NV",Nevada
 "Manchester, NH",New Hampshire
@@ -201,7 +182,6 @@ city,state
 "Newark, NJ",New Jersey
 "Trenton, NJ",New Jersey
 "Albuquerque, NM",New Mexico
-"Hobbs, NM",New Mexico
 "Roswell, NM",New Mexico
 "Santa Fe, NM",New Mexico
 "Albany, NY",New York
@@ -211,8 +191,6 @@ city,state
 "Islip, NY",New York
 "Ithaca/Cortland, NY",New York
 "New York, NY",New York
-"Newburgh/Poughkeepsie, NY",New York
-"Niagara Falls, NY",New York
 "Plattsburgh, NY",New York
 "Rochester, NY",New York
 "Syracuse, NY",New York
@@ -223,11 +201,9 @@ city,state
 "Fayetteville, NC",North Carolina
 "Greensboro/High Point, NC",North Carolina
 "Jacksonville/Camp Lejeune, NC",North Carolina
-"New Bern/Morehead/Beaufort, NC",North Carolina
 "Raleigh/Durham, NC",North Carolina
 "Wilmington, NC",North Carolina
 "Bismarck/Mandan, ND",North Dakota
-"Devils Lake, ND",North Dakota
 "Dickinson, ND",North Dakota
 "Fargo, ND",North Dakota
 "Grand Forks, ND",North Dakota
@@ -246,7 +222,6 @@ city,state
 "Bend/Redmond, OR",Oregon
 "Eugene, OR",Oregon
 "Medford, OR",Oregon
-"North Bend/Coos Bay, OR",Oregon
 "Portland, OR",Oregon
 "Allentown/Bethlehem/Easton, PA",Pennsylvania
 "Harrisburg, PA",Pennsylvania
@@ -298,16 +273,11 @@ city,state
 "Waco, TX",Texas
 "Wichita Falls, TX",Texas
 "Guam, TT",U.S. Pacific Trust Territories and Possessions
-"Pago Pago, TT",U.S. Pacific Trust Territories and Possessions
-"Saipan, TT",U.S. Pacific Trust Territories and Possessions
 "Charlotte Amalie, VI",U.S. Virgin Islands
 "Christiansted, VI",U.S. Virgin Islands
-"Cedar City, UT",Utah
-"Moab, UT",Utah
 "Provo, UT",Utah
 "Salt Lake City, UT",Utah
 "St. George, UT",Utah
-"Vernal, UT",Utah
 "Burlington, VT",Vermont
 "Charlottesville, VA",Virginia
 "Norfolk, VA",Virginia
@@ -323,21 +293,15 @@ city,state
 "Ashland, WV",West Virginia
 "Charleston/Dunbar, WV",West Virginia
 "Clarksburg/Fairmont, WV",West Virginia
-"Morgantown, WV",West Virginia
 "Appleton, WI",Wisconsin
-"Eau Claire, WI",Wisconsin
 "Green Bay, WI",Wisconsin
-"La Crosse, WI",Wisconsin
 "Madison, WI",Wisconsin
 "Milwaukee, WI",Wisconsin
 "Mosinee, WI",Wisconsin
-"Rhinelander, WI",Wisconsin
 "Casper, WY",Wyoming
 "Cheyenne, WY",Wyoming
-"Cody, WY",Wyoming
 "Gillette, WY",Wyoming
 "Jackson, WY",Wyoming
 "Laramie, WY",Wyoming
 "Riverton/Lander, WY",Wyoming
 "Rock Springs, WY",Wyoming
-"Sheridan, WY",Wyoming

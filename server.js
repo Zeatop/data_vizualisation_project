@@ -2,13 +2,12 @@
 const express = require('express')
 const app = express()
 const port = 3000
+const path = require('path');
 
-// Cette ligne indique le répertoire qui contient
-// les fichiers statiques: html, css, js, images etc.
-app.use(express.static('views'))
+app.use(express.static(path.join(__dirname, 'views')))
 
 app.get('/', (req, res) => {
-  res.render('index')
+  res.sendFile(path.join(__dirname, 'views', 'index.html'))
 })
 
 app.listen(port, () => {

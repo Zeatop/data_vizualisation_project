@@ -7,13 +7,13 @@ from models import DataPreparation
 project_dir = os.getcwd()
 
 # Specify your desired folder
-data_folder = "./data"
+data_folder = "../views/data"
 
 #folders for each persons
-data_folder_leo = "./data/leo"
-data_folder_credo = "./data/credo"
-data_folder_delphine = "./data/delphine"
-data_folder_khadija = "./data/khadija"
+data_folder_leo = data_folder + "/leo"
+data_folder_credo = data_folder + "/credo"
+data_folder_delphine = data_folder + "/delphine"
+data_folder_khadija = data_folder + "/khadija"
 
 # Create folders if it doesn't exist
 if not os.path.exists(data_folder):
@@ -49,7 +49,9 @@ for file in os.listdir(path):
 
 
 sample_table_path = os.path.join(project_dir, data_folder + "/flight_data_2024_sample.csv")
-table_path = os.path.join(project_dir, data_folder + "/flight_data_2024.csv")
+table_path = os.path.join(project_dir, data_folder + "/flight_data_2024_sample.csv")
+#table_path = os.path.join(project_dir, data_folder + "/flight_data_2024.csv")
+# TODO : review this bloc above if we switch data set become very a lot
 
 sample_table = pandas.read_csv(sample_table_path, delimiter=',')
 table = pandas.read_csv(table_path, delimiter=',')
