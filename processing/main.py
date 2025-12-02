@@ -12,10 +12,10 @@ data_folder = "../flightData"
 folder_list.append(data_folder)
 
 #folders for each persons
-data_folder_leo = data_folder + "/leo"
-data_folder_credo = data_folder + "/credo"
-data_folder_delphine = data_folder + "/delphine"
-data_folder_khadija = data_folder + "/khadija"
+data_folder_leo = data_folder + "/dataLeo"
+data_folder_credo = data_folder + "/dataCredo"
+data_folder_delphine = data_folder + "/dataDelphine"
+data_folder_khadija = data_folder + "/dataKhadija"
 folder_list.append(data_folder_leo)
 folder_list.append(data_folder_credo)
 folder_list.append(data_folder_delphine)
