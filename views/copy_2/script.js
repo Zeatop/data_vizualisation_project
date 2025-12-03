@@ -1,11 +1,16 @@
 const width = document.getElementById("map-wrapper").clientWidth;
 const height = document.getElementById("map-wrapper").clientHeight;
 
+console.log(`Map dimensions: ${width}x${height}`);
+
 // --- CONFIGURATION D3 ---
 const svg = d3.select("#map-wrapper").append("svg")
     .attr("width", "100%")
     .attr("height", "100%")
-    .attr("viewBox", `0 0 ${width} ${height}`);
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .style("shape-rendering", "crispEdges")
+    .style("text-rendering", "geometricPrecision");
 
 // Définition des flèches (Markers)
 const defs = svg.append("defs");
@@ -13,14 +18,15 @@ function createMarker(id, color) {
     defs.append("marker")
         .attr("id", id)
         .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 18) // Recule la flèche pour qu'elle ne soit pas SUR le point de la ville
+        .attr("refX", 18)
         .attr("refY", 0)
         .attr("markerWidth", 5)
         .attr("markerHeight", 5)
         .attr("orient", "auto")
         .append("path")
         .attr("d", "M0,-5L10,0L0,5")
-        .attr("fill", color);
+        .attr("fill", color)
+        .attr("stroke", "none");
 }
 createMarker("arrow-outbound", "#2563eb");
 createMarker("arrow-inbound", "#db2777");
@@ -35,24 +41,28 @@ const projection = d3.geoAlbersUsa().translate([width/2, height/2]).scale(width 
 const path = d3.geoPath().projection(projection);
 
 const zoom = d3.zoom()
-    .scaleExtent([0.5, 8]) // Permet de dézoomer (0.5) et de zoomer (8)
+    .scaleExtent([0.5, 8])
     .on("zoom", () => {
         mapGroup.attr("transform", d3.event.transform);
-        // Zoom sémantique: garder les lignes fines
-        gRoutes.selectAll("path").style("stroke-width", d => d.selected ? 2/d3.event.transform.k : 1/d3.event.transform.k);
-        gCities.selectAll("circle").attr("r", d => (d.baseR || 3) / Math.sqrt(d3.event.transform.k));
+        // Zoom sémantique pour Windows: garder stroke-width visible
+        gRoutes.selectAll("path").style("stroke-width", d => {
+            const baseWidth = d.selected ? 2 : 1.5;
+            const scaledWidth = Math.max(0.7, baseWidth / d3.event.transform.k);
+            return scaledWidth + "px";
+        });
+        gCities.selectAll("circle").attr("r", d => Math.max(2, (d.baseR || 3) / Math.sqrt(d3.event.transform.k)));
     });
 svg.call(zoom);
 
 // --- ÉTAT (STATE) ---
 const state = {
     data: {},
-    lookup: {}, // Ville -> Coords
-    mode: "month", // 'month' ou 'week'
+    lookup: {},
+    mode: "month",
     timeValue: 1,
     delayType: "all",
     selectedCity: null,
-    direction: "all" // 'all', 'outbound', 'inbound'
+    direction: "all"
 };
 
 // --- CHARGEMENT ---
@@ -66,50 +76,111 @@ const files = [
 
 Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
     .then(([us, cities, monthData, weekData, lateData]) => {
+        console.log("✓ All files loaded successfully");
 
         // 1. Carte USA
         gStates.selectAll("path")
             .data(topojson.feature(us, us.objects.states).features)
-            .enter().append("path").attr("d", path);
+            .enter().append("path")
+            .attr("d", path)
+            .style("fill", "#e2e8f0")
+            .style("stroke", "#ffffff")
+            .style("stroke-width", "1px");
 
-        // 2. Préparation Villes
-        const cityCounts = {}; // Pour la taille des cercles
+        // 2. Préparation Villes avec validation stricte
+        const cityCounts = {};
+        let invalidCount = 0;
 
         cities.features.forEach(f => {
-            if(f.geometry) {
+            if(f.geometry &&
+               f.geometry.type === "Point" &&
+               f.geometry.coordinates &&
+               Array.isArray(f.geometry.coordinates) &&
+               f.geometry.coordinates.length === 2 &&
+               typeof f.geometry.coordinates[0] === 'number' &&
+               typeof f.geometry.coordinates[1] === 'number') {
                 state.lookup[f.properties.city] = f.geometry.coordinates;
                 cityCounts[f.properties.city] = 0;
+            } else {
+                invalidCount++;
             }
         });
+
+        console.log(`✓ Cities loaded: ${Object.keys(state.lookup).length} valid, ${invalidCount} invalid`);
 
         // Nettoyage des données numériques
         const clean = (d) => ({
             ...d,
-            flight_number: +d.flight_number,
-            month: +d.month,
-            week_number: +d.week_number,
-            is_late: +d.is_late
+            flight_number: +d.flight_number || 0,
+            month: +d.month || 0,
+            week_number: +d.week_number || 0,
+            is_late: +d.is_late || 0,
+            bool_carrier_delay_min: +d.bool_carrier_delay_min || 0,
+            bool_weather_delay_min: +d.bool_weather_delay_min || 0,
+            bool_traffic_delay_min: +d.bool_traffic_delay_min || 0,
+            bool_security_delay_min: +d.bool_security_delay_min || 0,
+            bool_late_aircraft_delay_min: +d.bool_late_aircraft_delay_min || 0
         });
 
-        state.data.month = monthData.map(clean);
-        state.data.week = weekData.map(clean);
-        state.data.late = lateData.map(clean);
+        // Filter to only keep flights for cities we have coordinates for
+        state.data.month = monthData
+            .map(clean)
+            .filter(d => state.lookup[d.origin_city] && state.lookup[d.dest_city]);
+
+        state.data.week = weekData
+            .map(clean)
+            .filter(d => state.lookup[d.origin_city] && state.lookup[d.dest_city]);
+
+        state.data.late = lateData
+            .map(clean)
+            .filter(d => state.lookup[d.origin_city] && state.lookup[d.dest_city]);
+
+        console.log(`✓ Flight data: month=${state.data.month.length}, week=${state.data.week.length}, late=${state.data.late.length}`);
 
         // 3. Initialisation Villes Graphiques
-        // On calcule une taille par défaut basée sur le total annuel
         state.data.month.forEach(d => {
-            if(cityCounts[d.origin_city] !== undefined) cityCounts[d.origin_city] += d.flight_number;
+            if(cityCounts[d.origin_city] !== undefined) {
+                cityCounts[d.origin_city] += d.flight_number;
+            }
         });
 
-        const sizeScale = d3.scaleSqrt().domain([0, 50000]).range([2, 8]);
+        const sizeScale = d3.scaleSqrt().domain([0, 50000]).range([3, 8]);
+
+        // Safe projection helper
+        const safeProject = (coords) => {
+            if (!coords || !Array.isArray(coords) || coords.length !== 2) {
+                return [0, 0];
+            }
+            try {
+                const result = projection(coords);
+                return result && Array.isArray(result) && result.length === 2 ? result : [0, 0];
+            } catch (e) {
+                console.warn('Projection error:', e);
+                return [0, 0];
+            }
+        };
+
+        // Create circles for cities
+        const cityFeatures = cities.features.filter(d =>
+            d.geometry &&
+            d.geometry.coordinates &&
+            Array.isArray(d.geometry.coordinates) &&
+            d.geometry.coordinates.length === 2 &&
+            state.lookup[d.properties.city]
+        );
+
+        console.log(`✓ Creating ${cityFeatures.length} city circles`);
 
         gCities.selectAll("circle")
-            .data(cities.features.filter(d => state.lookup[d.properties.city]))
+            .data(cityFeatures)
             .enter().append("circle")
             .attr("class", "city")
-            .attr("transform", d => `translate(${projection(d.geometry.coordinates)})`)
+            .attr("cx", d => safeProject(d.geometry.coordinates)[0])
+            .attr("cy", d => safeProject(d.geometry.coordinates)[1])
             .attr("r", d => sizeScale(cityCounts[d.properties.city] || 0))
-            .each(function(d) { d.baseR = sizeScale(cityCounts[d.properties.city] || 0); })
+            .each(function(d) {
+                d.baseR = sizeScale(cityCounts[d.properties.city] || 0);
+            })
             .on("click", d => selectCity(d.properties.city))
             .on("mouseover", d => {
                 const cityName = d.properties.city;
@@ -123,27 +194,44 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
                     </div>`;
                 showTooltip(html, d3.event.pageX, d3.event.pageY);
             })
-            .on("mouseout", () => document.getElementById("tooltip").classList.add("hidden"));
+            .on("mouseout", () => {
+                const tooltip = document.getElementById("tooltip");
+                if(tooltip) tooltip.classList.add("hidden");
+            });
 
         // 4. Remplir le datalist et Select Temps
         const cityList = document.getElementById("cities-list");
-        Object.keys(state.lookup).sort().forEach(c => {
-            let opt = document.createElement("option");
-            opt.value = c;
-            cityList.appendChild(opt);
-        });
+        if(cityList) {
+            Object.keys(state.lookup).sort().forEach(c => {
+                let opt = document.createElement("option");
+                opt.value = c;
+                cityList.appendChild(opt);
+            });
+        }
 
         populateTimeSelect();
         updateMap();
+
+        console.log("✓ Visualization initialized");
+    })
+    .catch(error => {
+        console.error('Error loading data:', error);
+        const loadingEl = document.getElementById("loading");
+        if (loadingEl) {
+            loadingEl.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+        }
+        alert('Error loading data: ' + error.message);
     });
 
 // --- LOGIQUE METIER ---
 
 function populateTimeSelect() {
     const sel = document.getElementById("time-select");
+    if(!sel) return;
+
     sel.innerHTML = "";
     if(state.mode === 'month') {
-        const months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         months.forEach((m, i) => {
             let opt = document.createElement("option");
             opt.value = i + 1;
@@ -154,7 +242,7 @@ function populateTimeSelect() {
         for(let i=1; i<=52; i++) {
             let opt = document.createElement("option");
             opt.value = i;
-            opt.text = "Semaine " + i;
+            opt.text = "Week " + i;
             sel.appendChild(opt);
         }
     }
@@ -165,18 +253,16 @@ function updateMap() {
     // 1. Choisir le bon Dataset
     let currentData = [];
     if(state.delayType !== 'all') {
-        // Mode 'Cause de retard' -> on utilise le dataset late
-        currentData = state.data.late.filter(d => +d[state.delayType] === 1);
+        currentData = state.data.late.filter(d => d[state.delayType] == 1);
     } else {
-        // Mode temporel standard
         if(state.mode === 'month') {
-            currentData = state.data.month.filter(d => d.month === state.timeValue);
+            currentData = state.data.month.filter(d => d.month == state.timeValue);
         } else {
-            currentData = state.data.week.filter(d => d.week_number === state.timeValue);
+            currentData = state.data.week.filter(d => d.week_number == state.timeValue);
         }
     }
 
-    // 2. Filtrer par Ville (et Direction) si une ville est sélectionnée
+    // 2. Filtrer par Ville et Direction
     let displayRoutes = [];
 
     if (state.selectedCity) {
@@ -184,9 +270,8 @@ function updateMap() {
             const isOut = d.origin_city === state.selectedCity;
             const isIn = d.dest_city === state.selectedCity;
 
-            if (!isOut && !isIn) return; // Pas concerné
+            if (!isOut && !isIn) return;
 
-            // Filtre Directionnel
             if (state.direction === 'all') {
                 d.type = isOut ? 'outbound' : 'inbound';
                 displayRoutes.push(d);
@@ -199,15 +284,12 @@ function updateMap() {
             }
         });
     } else {
-        // Vue d'ensemble (Overview) : On montre tout mais en simplifié
-        // Si trop de données, on filtre les petits vols pour la performance
-        displayRoutes = currentData.filter(d => d.flight_number > 5);
+        displayRoutes = currentData.filter(d => d.flight_number > 2);
         displayRoutes.forEach(d => d.type = 'default');
     }
 
     // 3. DESSIN (Data Join)
-    // Clé unique: origine-dest
-    const routes = gRoutes.selectAll("path").data(displayRoutes, d => d.origin_city + "-" + d.dest_city);
+    const routes = gRoutes.selectAll("path").data(displayRoutes, d => d.origin_city + "|" + d.dest_city);
 
     routes.exit().remove();
 
@@ -218,13 +300,21 @@ function updateMap() {
     const onTimePct = totalFlights > 0 ? (100 - latePct).toFixed(1) : 0;
 
     // Mettre à jour les statistiques
-    document.getElementById('route-count').textContent = displayRoutes.length;
-    document.getElementById('flight-count').textContent = totalFlights;
-    document.getElementById('ontime-pct').textContent = onTimePct + '%';
-    document.getElementById('late-pct').textContent = latePct + '%';
+    const routeCount = document.getElementById('route-count');
+    const flightCount = document.getElementById('flight-count');
+    const ontimePct = document.getElementById('ontime-pct');
+    const latePctEl = document.getElementById('late-pct');
+
+    if(routeCount) routeCount.textContent = displayRoutes.length;
+    if(flightCount) flightCount.textContent = totalFlights;
+    if(ontimePct) ontimePct.textContent = onTimePct + '%';
+    if(latePctEl) latePctEl.textContent = latePct + '%';
 
     const enterRoutes = routes.enter().append("path")
-        .attr("fill", "none");
+        .attr("fill", "none")
+        .style("stroke-linecap", "round")
+        .style("stroke-linejoin", "round")
+        .style("paint-order", "stroke");
 
     routes.merge(enterRoutes)
         .attr("class", d => `route ${d.type}`)
@@ -235,28 +325,30 @@ function updateMap() {
             return path({type: "LineString", coordinates: [src, dst]});
         })
         .attr("marker-end", d => {
-            // Pas de flèche en vue globale (trop chargé)
             if(!state.selectedCity) return null;
             return d.type === 'outbound' ? "url(#arrow-outbound)" : "url(#arrow-inbound)";
         })
-        .style("stroke-width", d => state.selectedCity ? 2 : 0.5)
+        .style("stroke-width", d => (state.selectedCity ? "2px" : "1.5px"))
         .on("mouseover", function(d) {
-            d3.select(this).style("stroke-width", 4).raise();
+            d3.select(this)
+                .style("stroke-width", "4px")
+                .style("opacity", 1);
             const latePct = d.flight_number > 0 ? ((d.is_late/d.flight_number)*100).toFixed(1) : 0;
             const onTimePct = d.flight_number > 0 ? (100 - latePct).toFixed(1) : 0;
-            const direction = d.type === 'outbound' ? '📤 Departure' : '📥 Arrival';
+            const direction = d.type === 'outbound' ? '📤 Departure' : (d.type === 'inbound' ? '📥 Arrival' : '✈️ Flight');
             const html = `<div class="tooltip-title">${direction}</div>
                 <div class="tooltip-row"><strong>${d.origin_city}</strong> ✈️ <strong>${d.dest_city}</strong></div>
                 <div class="tooltip-stats">
-                    <div class="tooltip-row"><span>📊 Total Flights:</span> <strong>${d.flight_number}</strong></div>
+                    <div class="tooltip-row"><span>📊 Flights:</span> <strong>${d.flight_number}</strong></div>
                     <div class="tooltip-row"><span>⏰ On Time:</span> <strong style="color: #10b981;">${onTimePct}%</strong></div>
                     <div class="tooltip-row"><span>⚠️ Late:</span> <strong style="color: #ef4444;">${latePct}%</strong></div>
                 </div>`;
             showTooltip(html, d3.event.pageX, d3.event.pageY);
         })
         .on("mouseout", function(d) {
-            d3.select(this).style("stroke-width", state.selectedCity ? 2 : 0.5);
-            document.getElementById("tooltip").classList.add("hidden");
+            d3.select(this).style("stroke-width", state.selectedCity ? "2px" : "1.5px").style("opacity", 0.65);
+            const tooltip = document.getElementById("tooltip");
+            if(tooltip) tooltip.classList.add("hidden");
         });
 
     // Mise à jour visuelle des villes
@@ -264,9 +356,8 @@ function updateMap() {
         .classed("active", d => d.properties.city === state.selectedCity)
         .attr("opacity", d => {
             if(!state.selectedCity) return 1;
-            // Si une ville est sélectionnée, on estompe les villes non connectées
             const isConnected = displayRoutes.some(r => r.origin_city === d.properties.city || r.dest_city === d.properties.city);
-            return (d.properties.city === state.selectedCity || isConnected) ? 1 : 0.1;
+            return (d.properties.city === state.selectedCity || isConnected) ? 1 : 0.2;
         });
 }
 
@@ -274,74 +365,101 @@ function updateMap() {
 
 function selectCity(name) {
     state.selectedCity = name;
-    document.getElementById("city-search").value = name;
+    const citySearch = document.getElementById("city-search");
+    if(citySearch) citySearch.value = name;
 
-    // Afficher les contrôles de direction
     const dirGroup = document.getElementById("direction-group");
-    if(name) {
-        dirGroup.classList.remove("hidden");
-        // Zoom automatique vers la ville
-        const coords = state.lookup[name];
-        if(coords) {
-            const tr = projection(coords);
-            svg.transition().duration(750).call(
-                zoom.transform,
-                d3.zoomIdentity.translate(width/2 - tr[0]*3, height/2 - tr[1]*3).scale(3)
-            );
+    if(dirGroup) {
+        if(name) {
+            dirGroup.classList.remove("hidden");
+            const coords = state.lookup[name];
+            if(coords) {
+                const tr = projection(coords);
+                if(tr) {
+                    svg.transition().duration(750).call(
+                        zoom.transform,
+                        d3.zoomIdentity.translate(width/2 - tr[0]*3, height/2 - tr[1]*3).scale(3)
+                    );
+                }
+            }
+        } else {
+            dirGroup.classList.add("hidden");
+            state.direction = 'all';
+            svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
         }
-    } else {
-        dirGroup.classList.add("hidden");
-        state.direction = 'all'; // Reset direction
-        // Reset zoom
-        svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
     }
     updateMap();
 }
 
 // Events Listeners
-document.getElementById("mode-select").addEventListener("change", (e) => {
-    state.mode = e.target.value;
-    state.timeValue = 1;
-    populateTimeSelect();
-    updateMap();
-});
-
-document.getElementById("time-select").addEventListener("change", (e) => {
-    state.timeValue = +e.target.value;
-    updateMap();
-});
-
-document.getElementById("delay-select").addEventListener("change", (e) => {
-    state.delayType = e.target.value;
-    updateMap();
-});
-
-document.getElementById("city-search").addEventListener("change", (e) => selectCity(e.target.value));
-document.getElementById("reset-btn").addEventListener("click", () => {
-    document.getElementById("city-search").value = "";
-    selectCity(null);
-});
-
-// Délégation d'événement pour les radios buttons (Direction)
-document.querySelector(".toggle-group").addEventListener("change", (e) => {
-    if(e.target.name === "dir") {
-        state.direction = e.target.value;
+const modeSelect = document.getElementById("mode-select");
+if(modeSelect) {
+    modeSelect.addEventListener("change", (e) => {
+        state.mode = e.target.value;
+        state.timeValue = 1;
+        populateTimeSelect();
         updateMap();
-    }
-});
+    });
+}
 
-document.getElementById("zoom-in").addEventListener("click", () => svg.transition().call(zoom.scaleBy, 1.4));
-document.getElementById("zoom-out").addEventListener("click", () => svg.transition().call(zoom.scaleBy, 0.6));
+const timeSelect = document.getElementById("time-select");
+if(timeSelect) {
+    timeSelect.addEventListener("change", (e) => {
+        state.timeValue = +e.target.value;
+        updateMap();
+    });
+}
+
+const delaySelect = document.getElementById("delay-select");
+if(delaySelect) {
+    delaySelect.addEventListener("change", (e) => {
+        state.delayType = e.target.value;
+        updateMap();
+    });
+}
+
+const citySearch = document.getElementById("city-search");
+if(citySearch) {
+    citySearch.addEventListener("change", (e) => selectCity(e.target.value));
+}
+
+const resetBtn = document.getElementById("reset-btn");
+if(resetBtn) {
+    resetBtn.addEventListener("click", () => {
+        if(citySearch) citySearch.value = "";
+        selectCity(null);
+    });
+}
+
+const toggleGroup = document.querySelector(".toggle-group");
+if(toggleGroup) {
+    toggleGroup.addEventListener("change", (e) => {
+        if(e.target.name === "dir") {
+            state.direction = e.target.value;
+            updateMap();
+        }
+    });
+}
+
+const zoomIn = document.getElementById("zoom-in");
+if(zoomIn) {
+    zoomIn.addEventListener("click", () => svg.transition().call(zoom.scaleBy, 1.4));
+}
+
+const zoomOut = document.getElementById("zoom-out");
+if(zoomOut) {
+    zoomOut.addEventListener("click", () => svg.transition().call(zoom.scaleBy, 0.6));
+}
 
 function showTooltip(html, x, y) {
     const t = document.getElementById("tooltip");
+    if(!t) return;
+
     t.innerHTML = html;
 
-    // Positionnement intelligent du tooltip
     let tooltipX = x + 15;
     let tooltipY = y + 15;
 
-    // Vérifier les limites de l'écran
     if (tooltipX + 350 > width) tooltipX = x - 365;
     if (tooltipY + 200 > height) tooltipY = y - 210;
 
@@ -349,3 +467,4 @@ function showTooltip(html, x, y) {
     t.style.top = tooltipY + "px";
     t.classList.remove("hidden");
 }
+
