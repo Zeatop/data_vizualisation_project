@@ -1,0 +1,447 @@
+// 1. CONFIG
+const config = {
+    colors: {
+        outbound: "#2563eb",
+        inbound: "#db2777",
+        default: "#64748b"
+    }
+};
+
+const container = document.getElementById("map-wrapper");
+const width = container.clientWidth;
+const height = container.clientHeight;
+
+// 2. D3 SETUP
+const svg = d3.select("#map-wrapper")
+    .append("svg")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("viewBox", `0 0 ${width} ${height}`);
+
+// Projection composite d3.geoAlbersUsa qui gère automatiquement les encarts
+const projection = d3.geoAlbersUsa()
+    .translate([width / 2, height / 2])
+    .scale(Math.min(width, height) * 1.6);
+
+const path = d3.geoPath().projection(projection);
+
+// Ajouter un rectangle de fond pour détecter les clics en dehors des éléments
+svg.insert("rect", ":first-child")
+    .attr("class", "background")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("fill", "transparent")
+    .on("click", function() {
+        // Vérifier que le clic n'est pas sur une ville ou une route
+        if (d3.event.target === this) {
+            resetView();
+        }
+    });
+
+const mapGroup = svg.append("g");
+const gStates = mapGroup.append("g").attr("class", "states-layer");
+const gRoutes = mapGroup.append("g").attr("class", "routes-layer");
+const gCities = mapGroup.append("g").attr("class", "cities-layer");
+
+const tooltip = d3.select("#tooltip");
+
+// Markers
+const defs = svg.append("defs");
+['outbound', 'inbound'].forEach(type => {
+    defs.append("marker")
+        .attr("id", `arrow-${type}`)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 15)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", config.colors[type]);
+});
+
+// 4. STATE MANAGEMENT
+const state = {
+    data: {},
+    lookup: {},
+    mode: "month",
+    timeValue: 1,
+    lateFilter: "all",
+    selectedCity: null,
+    direction: "all"
+};
+
+// 5. LOAD DATA
+const files = [
+    "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
+    "../../citiesData/us_cities_from_csv.geojson",
+    "../../flightData/dataCredo/aggregated_by_month_and_route.csv",
+    "../../flightData/dataCredo/aggregated_by_week_and_route.csv",
+    "../../flightData/dataCredo/aggregated_by_late_type_and_route.csv"
+];
+
+Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
+    .then(function([usMap, cityGeo, monthData, weekData, lateData]) {
+
+        state.data = { month: monthData, week: weekData, late: lateData };
+
+        // Séparer les états par région
+        const features = topojson.feature(usMap, usMap.objects.states).features;
+        const mainland = features.filter(d => {
+            const id = d.id;
+            return id !== "02" && id !== "15" && id !== "72"; // Exclure Alaska (02), Hawaii (15), Porto Rico (72)
+        });
+        const alaska = features.filter(d => d.id === "02");
+        const hawaii = features.filter(d => d.id === "15");
+        const puertoRico = features.filter(d => d.id === "72");
+
+        // Dessiner les états continentaux
+        gStates.selectAll("path.mainland")
+            .data(mainland)
+            .enter().append("path")
+            .attr("class", "mainland")
+            .attr("d", path);
+
+        // Dessiner Alaska avec sa propre projection
+        const alaskaProjection = d3.geoAlbers()
+            .rotate([154, 0])
+            .center([-2, 64])
+            .parallels([55, 65])
+            .scale(Math.min(width, height) * 0.35)
+            .translate([width * 0.15, height * 0.85]);
+        
+        const alaskaPath = d3.geoPath().projection(alaskaProjection);
+        
+        gStates.selectAll("path.alaska")
+            .data(alaska)
+            .enter().append("path")
+            .attr("class", "alaska territory-inset")
+            .attr("d", alaskaPath);
+
+        // Dessiner Hawaii avec sa propre projection
+        const hawaiiProjection = d3.geoMercator()
+            .center([-157, 20.5])
+            .scale(Math.min(width, height) * 0.5)
+            .translate([width * 0.35, height * 0.88]);
+        
+        const hawaiiPath = d3.geoPath().projection(hawaiiProjection);
+        
+        gStates.selectAll("path.hawaii")
+            .data(hawaii)
+            .enter().append("path")
+            .attr("class", "hawaii territory-inset")
+            .attr("d", hawaiiPath);
+
+        // Dessiner Porto Rico avec sa propre projection
+        const puertoRicoProjection = d3.geoMercator()
+            .center([-66.5, 18.2])
+            .scale(Math.min(width, height) * 2)
+            .translate([width * 0.75, height * 0.88]);
+        
+        const puertoRicoPath = d3.geoPath().projection(puertoRicoProjection);
+        
+        gStates.selectAll("path.puerto-rico")
+            .data(puertoRico)
+            .enter().append("path")
+            .attr("class", "puerto-rico territory-inset")
+            .attr("d", puertoRicoPath);
+
+        // Créer la fonction de projection adaptative pour les villes
+        function getProjectionForCoords(coords) {
+            const [lon, lat] = coords;
+            
+            // Alaska
+            if (lon < -130 && lat > 51) {
+                return alaskaProjection;
+            }
+            // Hawaii
+            else if (lon < -154 && lat < 23 && lat > 18) {
+                return hawaiiProjection;
+            }
+            // Porto Rico et Caraïbes
+            else if (lon > -68 && lon < -64 && lat > 17 && lat < 19) {
+                return puertoRicoProjection;
+            }
+            // États-Unis continentaux
+            return projection;
+        }
+
+        cityGeo.features.forEach(f => {
+            if(f.geometry && f.geometry.coordinates) {
+                const coords = f.geometry.coordinates;
+                const cityProjection = getProjectionForCoords(coords);
+                state.lookup[f.properties.city.trim()] = {
+                    coords: coords,
+                    projection: cityProjection,
+                    projectedCoords: cityProjection(coords)
+                };
+            }
+        });
+
+        const cityCounts = {};
+        const cityDepartures = {};
+        const cityArrivals = {};
+        monthData.forEach(d => {
+            cityCounts[d.origin_city] = (cityCounts[d.origin_city] || 0) + (+d.flight_number);
+            cityCounts[d.dest_city] = (cityCounts[d.dest_city] || 0) + (+d.flight_number);
+            cityDepartures[d.origin_city] = (cityDepartures[d.origin_city] || 0) + (+d.flight_number);
+            cityArrivals[d.dest_city] = (cityArrivals[d.dest_city] || 0) + (+d.flight_number);
+        });
+
+        // Stocker les statistiques dans state pour y accéder dans les événements
+        state.cityStats = { cityCounts, cityDepartures, cityArrivals };
+
+        const sizeScale = d3.scaleSqrt()
+            .domain([0, d3.max(Object.values(cityCounts))])
+            .range([3, 10]);
+
+        const colorScale = d3.scaleSequential()
+            .domain([0, d3.max(Object.values(cityCounts))])
+            .interpolator(d3.interpolateRgb("#22c55e", "#ef4444"));
+
+        gCities.selectAll("circle")
+            .data(cityGeo.features)
+            .enter().append("circle")
+            .attr("class", "city-node")
+            .filter(d => {
+                const cityData = state.lookup[d.properties.city];
+                return cityData && cityData.projectedCoords;
+            })
+            .attr("r", d => sizeScale(cityCounts[d.properties.city] || 0))
+            .attr("fill", d => colorScale(cityCounts[d.properties.city] || 0))
+            .attr("transform", d => {
+                const cityData = state.lookup[d.properties.city];
+                return `translate(${cityData.projectedCoords})`;
+            })
+            .on("click", d => selectCity(d.properties.city))
+            .on("mouseover", function(d) {
+                const cityName = d.properties.city;
+                const departures = state.cityStats.cityDepartures[cityName] || 0;
+                const arrivals = state.cityStats.cityArrivals[cityName] || 0;
+                const total = state.cityStats.cityCounts[cityName] || 0;
+                
+                const html = `
+                    <div style="font-weight:600; margin-bottom:6px; border-bottom:1px solid #555; padding-bottom:4px;">
+                        ${cityName}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px;">
+                        <span>Départs:</span> <strong>${departures.toLocaleString()}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:15px;">
+                        <span>Arrivées:</span> <strong>${arrivals.toLocaleString()}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px; padding-top:4px; border-top:1px solid #555;">
+                        <span>Total:</span> <strong>${total.toLocaleString()}</strong>
+                    </div>
+                `;
+                showTooltip(html, d3.event.pageX, d3.event.pageY);
+            })
+            .on("mouseout", function(d) {
+                hideTooltip();
+            });
+
+        const cityList = Object.keys(state.lookup).sort();
+        const select = document.getElementById("city-search");
+        cityList.forEach(city => {
+            const option = document.createElement("option");
+            option.value = city;
+            option.text = city;
+            select.appendChild(option);
+        });
+
+        updateMap();
+    });
+
+// 6. LOGIC & UPDATE
+function cleanData(d) {
+    return { ...d, is_late: +d.is_late, flight_number: +d.flight_number };
+}
+
+function updateMap() {
+    let dataset = [];
+    if (state.mode === "month") {
+        dataset = state.data.month.filter(d => +d.month === state.timeValue);
+    } else if (state.mode === "week") {
+        dataset = state.data.week.filter(d => +d.week_number === state.timeValue);
+    } else {
+        dataset = state.data.late;
+        if (state.lateFilter !== "all") {
+            dataset = dataset.filter(d => +d[state.lateFilter] === 1);
+        }
+    }
+    dataset = dataset.map(cleanData);
+
+    let displayData = [];
+
+    if (state.selectedCity) {
+        dataset.forEach(d => {
+            const isOut = d.origin_city === state.selectedCity;
+            const isIn = d.dest_city === state.selectedCity;
+
+            if (isOut && (state.direction === 'all' || state.direction === 'outbound')) {
+                d.type = 'outbound';
+                displayData.push(d);
+            } else if (isIn && (state.direction === 'all' || state.direction === 'inbound')) {
+                d.type = 'inbound';
+                displayData.push(d);
+            }
+        });
+    } else {
+        displayData = dataset.filter(d => d.flight_number > 0);
+        displayData.forEach(d => d.type = 'default');
+    }
+
+    const links = gRoutes.selectAll("path")
+        .data(displayData, d => d.origin_city + "-" + d.dest_city);
+
+    links.exit().remove();
+
+    const enterLinks = links.enter().append("path")
+        .attr("fill", "none")
+        .attr("stroke-linecap", "round");
+
+    links.merge(enterLinks)
+        .attr("class", d => `flight-route ${d.type}`)
+        .attr("d", d => {
+            const src = state.lookup[d.origin_city];
+            const dst = state.lookup[d.dest_city];
+            if(!src || !dst || !src.projectedCoords || !dst.projectedCoords) return null;
+            
+            const [x1, y1] = src.projectedCoords;
+            const [x2, y2] = dst.projectedCoords;
+            
+            return `M${x1},${y1} L${x2},${y2}`;
+        })
+        .attr("stroke", d => {
+            if (d.type === 'outbound') return config.colors.outbound;
+            if (d.type === 'inbound') return config.colors.inbound;
+            return "#94a3b8";
+        })
+        .attr("stroke-width", d => {
+            const base = Math.sqrt(d.flight_number);
+            return state.selectedCity ? Math.max(1.5, base) : Math.max(0.5, base/2);
+        })
+        .attr("marker-end", d => {
+            if (!state.selectedCity) return null;
+            return d.type === 'outbound' ? "url(#arrow-outbound)" : "url(#arrow-inbound)";
+        })
+        .on("mouseover", function(d) {
+            d3.select(this).style("stroke-width", 4).style("stroke", "#333").raise();
+            showLinkTooltip(d, d3.event.pageX, d3.event.pageY);
+        })
+        .on("mouseout", function(d) {
+            d3.select(this).style("stroke-width", null).style("stroke", null);
+            if(state.selectedCity) {
+                d3.select(this).style("stroke", d.type === 'outbound' ? config.colors.outbound : config.colors.inbound);
+            }
+            hideTooltip();
+        });
+
+    gCities.selectAll("circle")
+        .classed("active", d => d.properties.city === state.selectedCity)
+        .attr("opacity", d => {
+            if (!state.selectedCity) return 1;
+            const isConnected = displayData.some(l => l.origin_city === d.properties.city || l.dest_city === d.properties.city);
+            return isConnected || d.properties.city === state.selectedCity ? 1 : 0.1;
+        });
+}
+
+// 7. ACTIONS
+function selectCity(cityName) {
+    state.selectedCity = cityName;
+    document.getElementById("city-search").value = cityName;
+    document.getElementById("direction-controls").classList.remove("hidden");
+    updateMap();
+}
+
+function resetView() {
+    state.selectedCity = null;
+    document.getElementById("city-search").value = "";
+    document.getElementById("direction-controls").classList.add("hidden");
+    state.direction = 'all';
+    document.querySelector('input[name="direction"][value="all"]').checked = true;
+    updateMap();
+}
+
+// TOOLTIPS
+function showTooltip(text, x, y) {
+    tooltip.html(text).style("left", (x+10)+"px").style("top", (y-50)+"px").classed("hidden", false);
+}
+
+function showLinkTooltip(d, x, y) {
+    const latePct = d.flight_number > 0 ? ((d.is_late / d.flight_number) * 100).toFixed(1) : 0;
+    const html = `
+        <div style="font-weight:600; margin-bottom:4px; border-bottom:1px solid #555; padding-bottom:4px;">
+            ${d.origin_city} ➝ ${d.dest_city}
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:15px;">
+            <span>Total:</span> <strong>${d.flight_number}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:15px;">
+            <span>Late:</span> <strong style="color:${latePct>20?'#f87171':'#4ade80'}">${latePct}%</strong>
+        </div>
+    `;
+    showTooltip(html, x, y);
+}
+
+function hideTooltip() {
+    tooltip.classed("hidden", true);
+}
+
+
+// 8. EVENT LISTENERS
+document.getElementById("dataset-select").addEventListener("change", (e) => {
+    state.mode = e.target.value;
+    const isLate = state.mode === "late";
+    document.getElementById("time-controls").classList.toggle("hidden", isLate);
+    document.getElementById("late-controls").classList.toggle("hidden", !isLate);
+
+    if (state.mode === "month") {
+        document.getElementById("time-label").textContent = "MONTH";
+        const slider = document.getElementById("time-slider");
+        slider.max = 12;
+        slider.value = 1;
+        state.timeValue = 1;
+        document.getElementById("time-display").textContent = "January";
+    } else if (state.mode === "week") {
+        document.getElementById("time-label").textContent = "WEEK";
+        const slider = document.getElementById("time-slider");
+        slider.max = 52;
+        slider.value = 1;
+        state.timeValue = 1;
+        document.getElementById("time-display").textContent = "Week 1";
+    }
+    updateMap();
+});
+
+document.getElementById("time-slider").addEventListener("input", (e) => {
+    state.timeValue = +e.target.value;
+    const display = document.getElementById("time-display");
+    if (state.mode === "month") {
+        const date = new Date(2023, state.timeValue - 1, 1);
+        display.textContent = date.toLocaleString('default', { month: 'long' });
+    } else {
+        display.textContent = "Week " + state.timeValue;
+    }
+    updateMap();
+});
+
+document.getElementById("delay-select").addEventListener("change", (e) => {
+    state.lateFilter = e.target.value;
+    updateMap();
+});
+
+document.getElementById("city-search").addEventListener("change", (e) => {
+    if(e.target.value) selectCity(e.target.value);
+    else resetView();
+});
+
+document.getElementById("reset-btn").addEventListener("click", resetView);
+
+document.querySelectorAll('input[name="direction"]').forEach(radio => {
+    radio.addEventListener("change", (e) => {
+        state.direction = e.target.value;
+        updateMap();
+    });
+});
