@@ -115,6 +115,23 @@
     background: white;
   }
   
+  .chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+  }
+  
+  .chart-card-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #667eea;
+  }
+  
   .charts-wrapper {
     display: flex;
     gap: 30px;
@@ -137,6 +154,54 @@
   
   .myArea {
     transition: opacity 0.2s;
+  }
+  
+  .legend-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: white;
+    border: 2px solid transparent;
+  }
+  
+  .legend-item:hover {
+    background: #f0f0f0;
+    transform: translateY(-1px);
+  }
+  
+  .legend-item input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .legend-color {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 2px solid rgba(0,0,0,0.1);
+  }
+  
+  .legend-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    user-select: none;
   }
 </style>
 
@@ -188,22 +253,56 @@
         </label>
       </div>
     </div>
-    
-    <div class="control-group">
-      <div class="checkbox-group">
-        <label>
-          <input type="checkbox" id="showOnTime">
-          <span>Vols à l'heure</span>
-        </label>
-      </div>
-    </div>
   </div>
   
   <!-- Charts -->
   <div class="charts-container">
-    <div class="charts-wrapper">
-      <div class="chart-box" id="streamchart-origin"></div>
-      <div class="chart-box" id="streamchart-dest"></div>
+    <div class="chart-card">
+      <h2 class="chart-card-title">📈 Streamgraph - Distribution des retards par ville</h2>
+      
+      <!-- Légende interactive -->
+      <div class="legend-container" id="legend-container">
+        <div class="legend-item" data-key="bool_carrier_delay_min">
+          <input type="checkbox" id="legend-carrier" checked>
+          <div class="legend-color" style="background-color: #1b9e77;"></div>
+          <label for="legend-carrier" class="legend-label">Retard Compagnie</label>
+        </div>
+        
+        <div class="legend-item" data-key="bool_weather_delay_min">
+          <input type="checkbox" id="legend-weather" checked>
+          <div class="legend-color" style="background-color: #d95f02;"></div>
+          <label for="legend-weather" class="legend-label">Retard Météo</label>
+        </div>
+        
+        <div class="legend-item" data-key="bool_traffic_delay_min">
+          <input type="checkbox" id="legend-traffic" checked>
+          <div class="legend-color" style="background-color: #7570b3;"></div>
+          <label for="legend-traffic" class="legend-label">Retard Trafic</label>
+        </div>
+        
+        <div class="legend-item" data-key="bool_security_delay_min">
+          <input type="checkbox" id="legend-security" checked>
+          <div class="legend-color" style="background-color: #e7298a;"></div>
+          <label for="legend-security" class="legend-label">Retard Sécurité</label>
+        </div>
+        
+        <div class="legend-item" data-key="bool_late_aircraft_delay_min">
+          <input type="checkbox" id="legend-aircraft" checked>
+          <div class="legend-color" style="background-color: #66a61e;"></div>
+          <label for="legend-aircraft" class="legend-label">Retard Avion Précédent</label>
+        </div>
+        
+        <div class="legend-item" data-key="on_time_flights" id="legend-ontime-container">
+          <input type="checkbox" id="legend-ontime">
+          <div class="legend-color" style="background-color: #e6ab02;"></div>
+          <label for="legend-ontime" class="legend-label">Vols ponctuels</label>
+        </div>
+      </div>
+      
+      <div class="charts-wrapper">
+        <div class="chart-box" id="streamchart-origin"></div>
+        <div class="chart-box" id="streamchart-dest"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -241,6 +340,14 @@ let currentCity = "";
 let currentMode = "count";
 let currentPeriod = "month";
 let showOnTime = true;
+let activeDelayTypes = {
+  'bool_carrier_delay_min': true,
+  'bool_weather_delay_min': true,
+  'bool_traffic_delay_min': true,
+  'bool_security_delay_min': true,
+  'bool_late_aircraft_delay_min': true,
+  'on_time_flights': false
+};
 
 // Fonction pour dessiner le streamchart
 function drawStreamchart(selectedCity, viewMode = "count", timePeriod = "month", includeOnTime = true, svg, allData, cityColumn, chartTitle) {
@@ -248,8 +355,10 @@ function drawStreamchart(selectedCity, viewMode = "count", timePeriod = "month",
   // Nettoyer le SVG (sauf les axes et le titre qu'on va recréer)
   svg.selectAll("*").remove();
 
-  // Filtrer pour la ville sélectionnée
-  let data = allData.filter(d => d[cityColumn] === selectedCity);
+  // Filtrer pour la ville sélectionnée (ou toutes les villes si 'All')
+  let data = selectedCity === "All" 
+    ? allData 
+    : allData.filter(d => d[cityColumn] === selectedCity);
 
   if (data.length === 0) {
     svg.append("text")
@@ -277,26 +386,61 @@ function drawStreamchart(selectedCity, viewMode = "count", timePeriod = "month",
     .attr("text-anchor", "middle")
     .style("font-size", "14px")
     .style("fill", "#666")
-    .text(`${selectedCity}`);
+    .text(selectedCity === "All" ? "Toutes les villes" : `${selectedCity}`);
 
   // List of groups = les colonnes de types de retard (pas les colonnes de groupement)
-  const baseKeys = ['bool_carrier_delay_min', 'bool_weather_delay_min', 'bool_traffic_delay_min', 
-                'bool_security_delay_min', 'bool_late_aircraft_delay_min'];
+  const allKeys = ['bool_carrier_delay_min', 'bool_weather_delay_min', 'bool_traffic_delay_min', 
+                'bool_security_delay_min', 'bool_late_aircraft_delay_min', 'on_time_flights'];
   
-  // Ajouter 'on_time_flights' seulement si la checkbox est cochée
-  const keys = includeOnTime 
-    ? [...baseKeys, 'on_time_flights']
-    : baseKeys;
+  // Filtrer les clés selon les types actifs et la checkbox "vols à l'heure"
+  const keys = allKeys.filter(key => {
+    if (key === 'on_time_flights') {
+      return includeOnTime && activeDelayTypes[key];
+    }
+    return activeDelayTypes[key];
+  });
 
+  // Si 'All' est sélectionné, agréger les données par période
+  if (selectedCity === "All") {
+    const aggregatedData = {};
+    
+    data.forEach(function(d) {
+      const timeKey = timePeriod === "month" ? +d.month : +d.week_number;
+      
+      if (!aggregatedData[timeKey]) {
+        aggregatedData[timeKey] = {
+          timeValue: timeKey,
+          flight_number: 0,
+          is_late: 0,
+          bool_carrier_delay_min: 0,
+          bool_weather_delay_min: 0,
+          bool_traffic_delay_min: 0,
+          bool_security_delay_min: 0,
+          bool_late_aircraft_delay_min: 0
+        };
+      }
+      
+      aggregatedData[timeKey].flight_number += +d.flight_number;
+      aggregatedData[timeKey].is_late += +d.is_late;
+      aggregatedData[timeKey].bool_carrier_delay_min += +d.bool_carrier_delay_min;
+      aggregatedData[timeKey].bool_weather_delay_min += +d.bool_weather_delay_min;
+      aggregatedData[timeKey].bool_traffic_delay_min += +d.bool_traffic_delay_min;
+      aggregatedData[timeKey].bool_security_delay_min += +d.bool_security_delay_min;
+      aggregatedData[timeKey].bool_late_aircraft_delay_min += +d.bool_late_aircraft_delay_min;
+    });
+    
+    data = Object.values(aggregatedData).sort((a, b) => a.timeValue - b.timeValue);
+  }
+  
   // Convertir toutes les valeurs en nombres et calculer les pourcentages si nécessaire
   data.forEach(function(d) {
     // Utiliser month ou week_number selon la période
     if (timePeriod === "month") {
       d.month = +d.month;
-      d.timeValue = d.month;
+      d.timeValue = d.timeValue || d.month;
     } else {
       d.week_number = +d.week_number;
-      d.timeValue = d.week_number;
+      d.timeValue = d.timeValue || d.week_number;
     }
     d.flight_number = +d.flight_number;
     d.is_late = +d.is_late;
@@ -363,10 +507,26 @@ function drawStreamchart(selectedCity, viewMode = "count", timePeriod = "month",
     .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
     .range([ height, 0 ]);
 
-  // color palette
-  const color = d3.scaleOrdinal()
-    .domain(dataKeys)
-    .range(d3.schemeDark2);
+  // Mapping fixe des couleurs pour chaque type de retard
+  const colorMapping = {
+    'bool_carrier_delay_min': '#1b9e77',
+    'bool_weather_delay_min': '#d95f02',
+    'bool_traffic_delay_min': '#7570b3',
+    'bool_security_delay_min': '#e7298a',
+    'bool_late_aircraft_delay_min': '#66a61e',
+    'on_time_flights': '#e6ab02',
+    'bool_carrier_delay_min_pct': '#1b9e77',
+    'bool_weather_delay_min_pct': '#d95f02',
+    'bool_traffic_delay_min_pct': '#7570b3',
+    'bool_security_delay_min_pct': '#e7298a',
+    'bool_late_aircraft_delay_min_pct': '#66a61e',
+    'on_time_flights_pct': '#e6ab02'
+  };
+  
+  // color palette avec mapping fixe
+  const color = function(key) {
+    return colorMapping[key] || '#999999';
+  };
 
   //stack the data?
   const stackedData = d3.stack()
@@ -397,13 +557,13 @@ function drawStreamchart(selectedCity, viewMode = "count", timePeriod = "month",
     'bool_traffic_delay_min': 'Retard Trafic',
     'bool_security_delay_min': 'Retard Sécurité',
     'bool_late_aircraft_delay_min': 'Retard Avion Précédent',
-    'on_time_flights': 'Vols à l\'heure',
+    'on_time_flights': 'Vols ponctuels',
     'bool_carrier_delay_min_pct': 'Retard Compagnie',
     'bool_weather_delay_min_pct': 'Retard Météo',
     'bool_traffic_delay_min_pct': 'Retard Trafic',
     'bool_security_delay_min_pct': 'Retard Sécurité',
     'bool_late_aircraft_delay_min_pct': 'Retard Avion Précédent',
-    'on_time_flights_pct': 'Vols à l\'heure'
+    'on_time_flights_pct': 'Vols ponctuels'
   };
 
   // Three function that change the tooltip when user hover / move / leave a cell
@@ -479,24 +639,29 @@ Promise.all([
   const citySelect = d3.select("#citySelect");
   citySelect.selectAll("option").remove();
   
+  // Ajouter l'option 'All' en premier
+  citySelect.append("option")
+    .attr("value", "All")
+    .text("🌍 Toutes les villes");
+  
   citySelect
-    .selectAll("option")
+    .selectAll("option.city-option")
     .data(cities)
     .enter()
     .append("option")
+      .attr("class", "city-option")
       .attr("value", d => d)
       .text(d => d);
 
-  // Définir Atlanta comme ville par défaut si elle existe
-  const defaultCity = cities.includes("Atlanta, GA") ? "Atlanta, GA" : cities[0];
-  citySelect.property("value", defaultCity);
+  // Définir 'All' comme valeur par défaut
+  citySelect.property("value", "All");
 
   // Fonction pour redessiner les deux graphiques
   function updateCharts() {
     const selectedCity = citySelect.property("value");
     const viewMode = d3.select('input[name="viewMode"]:checked').property("value");
     const timePeriod = d3.select('input[name="timePeriod"]:checked').property("value");
-    const includeOnTime = d3.select('#showOnTime').property("checked");
+    const includeOnTime = activeDelayTypes['on_time_flights'];
     
     currentCity = selectedCity;
     currentMode = viewMode;
@@ -523,9 +688,21 @@ Promise.all([
 
   // Écouter les changements des boutons radio (période)
   d3.selectAll('input[name="timePeriod"]').on("change", updateCharts);
-
-  // Écouter les changements de la checkbox "vols à l'heure"
-  d3.select('#showOnTime').on("change", updateCharts);
+  
+  // Écouter les changements des checkboxes de la légende
+  d3.selectAll('.legend-item input[type="checkbox"]').on("change", function() {
+    const legendItem = d3.select(this.parentNode);
+    const key = legendItem.attr('data-key');
+    const checked = d3.select(this).property("checked");
+    
+    // Mettre à jour l'état actif
+    activeDelayTypes[key] = checked;
+    
+    // Style visuel pour indiquer l'état
+    legendItem.style('opacity', checked ? '1' : '0.5');
+    
+    updateCharts();
+  });
 });
 
 </script>
