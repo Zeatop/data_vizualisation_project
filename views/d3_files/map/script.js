@@ -75,14 +75,42 @@ const state = {
 // 5. LOAD DATA
 const files = [
     "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
-    "../../citiesData/us_cities_from_csv.geojson",
-    "../../flightData/dataCredo/aggregated_by_month_and_route.csv",
-    "../../flightData/dataCredo/aggregated_by_week_and_route.csv",
-    "../../flightData/dataCredo/aggregated_by_late_type_and_route.csv"
+    "../../../citiesData/us_cities_from_csv.geojson",
+    "../../../flightData/dataCredo/aggregated_by_month_and_route.csv",
+    "../../../flightData/dataCredo/aggregated_by_week_and_route.csv",
+    "../../../flightData/dataCredo/aggregated_by_late_type_and_route.csv"
 ];
 
 Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
     .then(function([usMap, cityGeo, monthData, weekData, lateData]) {
+
+        // Nettoyer les données une seule fois à la source
+        const cleanData = d => ({ ...d, is_late: +d.is_late, flight_number: +d.flight_number });
+        monthData = monthData.map(cleanData);
+        weekData = weekData.map(cleanData);
+        lateData = lateData.map(cleanData);
+
+        // Précalculer les datasets par mois
+        state.dataByMonth = {};
+        for (let m = 1; m <= 12; m++) {
+            state.dataByMonth[m] = monthData.filter(d => d.month == m);
+        }
+
+        // Précalculer les datasets par semaine
+        state.dataByWeek = {};
+        for (let w = 1; w <= 52; w++) {
+            state.dataByWeek[w] = weekData.filter(d => d.week_number == w);
+        }
+
+        // Précalculer les datasets par type de retard
+        state.dataByLateType = {
+            all: lateData,
+            bool_carrier_delay_min: lateData.filter(d => d.bool_carrier_delay_min == 1),
+            bool_weather_delay_min: lateData.filter(d => d.bool_weather_delay_min == 1),
+            bool_traffic_delay_min: lateData.filter(d => d.bool_traffic_delay_min == 1),
+            bool_security_delay_min: lateData.filter(d => d.bool_security_delay_min == 1),
+            bool_late_aircraft_delay_min: lateData.filter(d => d.bool_late_aircraft_delay_min == 1)
+        };
 
         state.data = { month: monthData, week: weekData, late: lateData };
 
@@ -192,6 +220,57 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
         // Stocker les statistiques dans state pour y accéder dans les événements
         state.cityStats = { cityCounts, cityDepartures, cityArrivals };
 
+        // Phase 2.1 : Précalculer tous les chemins de routes possibles
+        state.routePaths = {};
+        const allCities = Object.keys(state.lookup);
+        monthData.forEach(d => {
+            const routeKey = `${d.origin_city}-${d.dest_city}`;
+            if (state.routePaths[routeKey]) return; // Déjà calculé
+
+            const src = state.lookup[d.origin_city];
+            const dst = state.lookup[d.dest_city];
+            if (!src || !dst || !src.projectedCoords || !dst.projectedCoords) return;
+
+            const [x1, y1] = src.projectedCoords;
+            const [x2, y2] = dst.projectedCoords;
+
+            // Calculer le vecteur perpendiculaire une seule fois
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const perpX = -dy / dist;
+            const perpY = dx / dist;
+
+            // Stocker les 3 variantes du chemin
+            state.routePaths[routeKey] = {
+                normal: `M${x1},${y1} L${x2},${y2}`,
+                outbound: `M${x1 - perpX * 3},${y1 - perpY * 3} L${x2 - perpX * 3},${y2 - perpY * 3}`,
+                inbound: `M${x1 + perpX * 3},${y1 + perpY * 3} L${x2 + perpX * 3},${y2 + perpY * 3}`
+            };
+        });
+        
+        // Précalculer les tooltips pour éviter de les recalculer à chaque hover
+        state.cityTooltips = {};
+        Object.keys(state.lookup).forEach(cityName => {
+            const departures = cityDepartures[cityName] || 0;
+            const arrivals = cityArrivals[cityName] || 0;
+            const total = cityCounts[cityName] || 0;
+            state.cityTooltips[cityName] = `
+                <div style="font-weight:600; margin-bottom:6px; border-bottom:1px solid #555; padding-bottom:4px;">
+                    ${cityName}
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px;">
+                    <span>Départs:</span> <strong>${departures.toLocaleString()}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:15px;">
+                    <span>Arrivées:</span> <strong>${arrivals.toLocaleString()}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px; padding-top:4px; border-top:1px solid #555;">
+                    <span>Total:</span> <strong>${total.toLocaleString()}</strong>
+                </div>
+            `;
+        });
+
         const sizeScale = d3.scaleSqrt()
             .domain([0, d3.max(Object.values(cityCounts))])
             .range([3, 10]);
@@ -216,26 +295,8 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
             })
             .on("click", d => selectCity(d.properties.city))
             .on("mouseover", function(d) {
-                const cityName = d.properties.city;
-                const departures = state.cityStats.cityDepartures[cityName] || 0;
-                const arrivals = state.cityStats.cityArrivals[cityName] || 0;
-                const total = state.cityStats.cityCounts[cityName] || 0;
-                
-                const html = `
-                    <div style="font-weight:600; margin-bottom:6px; border-bottom:1px solid #555; padding-bottom:4px;">
-                        ${cityName}
-                    </div>
-                    <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px;">
-                        <span>Départs:</span> <strong>${departures.toLocaleString()}</strong>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; gap:15px;">
-                        <span>Arrivées:</span> <strong>${arrivals.toLocaleString()}</strong>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px; padding-top:4px; border-top:1px solid #555;">
-                        <span>Total:</span> <strong>${total.toLocaleString()}</strong>
-                    </div>
-                `;
-                showTooltip(html, d3.event.pageX, d3.event.pageY);
+                const html = state.cityTooltips[d.properties.city];
+                if (html) showTooltip(html, d3.event.pageX, d3.event.pageY);
             })
             .on("mouseout", function(d) {
                 hideTooltip();
@@ -243,34 +304,66 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
 
         const cityList = Object.keys(state.lookup).sort();
         const select = document.getElementById("city-search");
-        cityList.forEach(city => {
-            const option = document.createElement("option");
-            option.value = city;
-            option.text = city;
-            select.appendChild(option);
+        if (select) {
+            cityList.forEach(city => {
+                const opt = document.createElement("option");
+                opt.value = city;
+                opt.textContent = city;
+                select.appendChild(opt);
+            });
+        }
+
+        // Écouter les messages du parent pour mettre à jour la ville sélectionnée
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'updateMapCity') {
+                const cityName = event.data.city;
+                if (cityName && cityName !== 'All') {
+                    selectCity(cityName);
+                } else {
+                    resetView();
+                }
+            }
+            
+            if (event.data.type === 'updateMapPeriod') {
+                const period = event.data.period; // 'month' or 'week'
+                const datasetSelect = document.getElementById('dataset-select');
+                if (datasetSelect && period) {
+                    datasetSelect.value = period;
+                    state.mode = period;
+                    
+                    const isLate = state.mode === "late";
+                    document.getElementById("time-controls").classList.toggle("hidden", isLate);
+                    document.getElementById("late-controls").classList.toggle("hidden", !isLate);
+
+                    if (state.mode === "month") {
+                        document.getElementById("time-label").textContent = "MONTH";
+                        document.getElementById("time-slider").max = 12;
+                        state.timeValue = Math.min(state.timeValue, 12);
+                        updateTimeDisplay();
+                    } else if (state.mode === "week") {
+                        document.getElementById("time-label").textContent = "WEEK";
+                        document.getElementById("time-slider").max = 52;
+                        updateTimeDisplay();
+                    }
+                    updateMap();
+                }
+            }
         });
 
         updateMap();
     });
 
 // 6. LOGIC & UPDATE
-function cleanData(d) {
-    return { ...d, is_late: +d.is_late, flight_number: +d.flight_number };
-}
-
 function updateMap() {
+    // Phase 1.1 : Utiliser les datasets précalculés (pas de filtrage répété)
     let dataset = [];
     if (state.mode === "month") {
-        dataset = state.data.month.filter(d => +d.month === state.timeValue);
+        dataset = state.dataByMonth[state.timeValue];
     } else if (state.mode === "week") {
-        dataset = state.data.week.filter(d => +d.week_number === state.timeValue);
+        dataset = state.dataByWeek[state.timeValue];
     } else {
-        dataset = state.data.late;
-        if (state.lateFilter !== "all") {
-            dataset = dataset.filter(d => +d[state.lateFilter] === 1);
-        }
+        dataset = state.dataByLateType[state.lateFilter];
     }
-    dataset = dataset.map(cleanData);
 
     let displayData = [];
 
@@ -304,14 +397,16 @@ function updateMap() {
     links.merge(enterLinks)
         .attr("class", d => `flight-route ${d.type}`)
         .attr("d", d => {
-            const src = state.lookup[d.origin_city];
-            const dst = state.lookup[d.dest_city];
-            if(!src || !dst || !src.projectedCoords || !dst.projectedCoords) return null;
+            // Phase 2.1 : Utiliser les chemins précalculés
+            const routeKey = `${d.origin_city}-${d.dest_city}`;
+            const paths = state.routePaths[routeKey];
+            if (!paths) return null;
             
-            const [x1, y1] = src.projectedCoords;
-            const [x2, y2] = dst.projectedCoords;
-            
-            return `M${x1},${y1} L${x2},${y2}`;
+            // Sélectionner le bon chemin selon le contexte
+            if (state.selectedCity) {
+                return d.type === 'outbound' ? paths.outbound : paths.inbound;
+            }
+            return paths.normal;
         })
         .attr("stroke", d => {
             if (d.type === 'outbound') return config.colors.outbound;
@@ -325,39 +420,64 @@ function updateMap() {
         .attr("marker-end", d => {
             if (!state.selectedCity) return null;
             return d.type === 'outbound' ? "url(#arrow-outbound)" : "url(#arrow-inbound)";
-        })
-        .on("mouseover", function(d) {
-            d3.select(this).style("stroke-width", 4).style("stroke", "#333").raise();
-            showLinkTooltip(d, d3.event.pageX, d3.event.pageY);
-        })
-        .on("mouseout", function(d) {
-            d3.select(this).style("stroke-width", null).style("stroke", null);
-            if(state.selectedCity) {
-                d3.select(this).style("stroke", d.type === 'outbound' ? config.colors.outbound : config.colors.inbound);
-            }
-            hideTooltip();
         });
+
+    // Phase 3.1 : Délégation d'événements (un seul listener au lieu de milliers)
+    gRoutes.on("mouseover", function() {
+        const event = d3.event;
+        const target = event.target;
+        if (target.tagName === 'path') {
+            const d = d3.select(target).datum();
+            if (d) {
+                d3.select(target).attr("stroke-width", 4).attr("stroke", "#333");
+                showLinkTooltip(d, event.pageX, event.pageY);
+            }
+        }
+    });
+
+    gRoutes.on("mouseout", function() {
+        const event = d3.event;
+        const target = event.target;
+        if (target.tagName === 'path') {
+            d3.select(target).attr("stroke-width", null).attr("stroke", null);
+            hideTooltip();
+        }
+    });
+
+    // Phase 1.2 : Créer un Set des villes connectées (O(n) au lieu de O(n²))
+    const connectedCities = new Set();
+    if (state.selectedCity) {
+        displayData.forEach(d => {
+            connectedCities.add(d.origin_city);
+            connectedCities.add(d.dest_city);
+        });
+    }
 
     gCities.selectAll("circle")
         .classed("active", d => d.properties.city === state.selectedCity)
         .attr("opacity", d => {
             if (!state.selectedCity) return 1;
-            const isConnected = displayData.some(l => l.origin_city === d.properties.city || l.dest_city === d.properties.city);
-            return isConnected || d.properties.city === state.selectedCity ? 1 : 0.1;
+            return connectedCities.has(d.properties.city) || d.properties.city === state.selectedCity ? 1 : 0.1;
         });
 }
 
 // 7. ACTIONS
 function selectCity(cityName) {
     state.selectedCity = cityName;
-    document.getElementById("city-search").value = cityName;
+    const citySearchEl = document.getElementById("city-search");
+    if (citySearchEl) {
+        citySearchEl.value = cityName;
+    }
     document.getElementById("direction-controls").classList.remove("hidden");
     updateMap();
 }
 
 function resetView() {
     state.selectedCity = null;
-    document.getElementById("city-search").value = "";
+    const citySearchEl = document.getElementById("city-search");
+    if (citySearchEl) {
+        citySearchEl.value = "";
+    }
     document.getElementById("direction-controls").classList.add("hidden");
     state.direction = 'all';
     document.querySelector('input[name="direction"][value="all"]').checked = true;
@@ -389,9 +509,30 @@ function hideTooltip() {
     tooltip.classed("hidden", true);
 }
 
+function updateTimeDisplay() {
+    const display = document.getElementById("time-display");
+    if (state.mode === "month") {
+        const date = new Date(2023, state.timeValue - 1, 1);
+        display.textContent = date.toLocaleString('default', { month: 'long' });
+    } else {
+        display.textContent = "Week " + state.timeValue;
+    }
+}
+
+function updateTimeDisplay() {
+    const display = document.getElementById("time-display");
+    if (state.mode === "month") {
+        const months = ["January","February","March","April","May","June",
+                       "July","August","September","October","November","December"];
+        display.textContent = months[state.timeValue - 1] || "January";
+    } else {
+        display.textContent = `Week ${state.timeValue}`;
+    }
+}
+
 
 // 8. EVENT LISTENERS
-document.getElementById("dataset-select").addEventListener("change", (e) => {
+document.getElementById("dataset-select").addEventListener("change", function(e) {
     state.mode = e.target.value;
     const isLate = state.mode === "late";
     document.getElementById("time-controls").classList.toggle("hidden", isLate);
@@ -415,33 +556,21 @@ document.getElementById("dataset-select").addEventListener("change", (e) => {
     updateMap();
 });
 
-document.getElementById("time-slider").addEventListener("input", (e) => {
+document.getElementById("time-slider").addEventListener("input", function(e) {
     state.timeValue = +e.target.value;
-    const display = document.getElementById("time-display");
-    if (state.mode === "month") {
-        const date = new Date(2023, state.timeValue - 1, 1);
-        display.textContent = date.toLocaleString('default', { month: 'long' });
-    } else {
-        display.textContent = "Week " + state.timeValue;
-    }
+    updateTimeDisplay();
     updateMap();
 });
 
-document.getElementById("delay-select").addEventListener("change", (e) => {
+document.getElementById("delay-select").addEventListener("change", function(e) {
     state.lateFilter = e.target.value;
     updateMap();
 });
 
-document.getElementById("city-search").addEventListener("change", (e) => {
-    if(e.target.value) selectCity(e.target.value);
-    else resetView();
-});
-
-document.getElementById("reset-btn").addEventListener("click", resetView);
-
 document.querySelectorAll('input[name="direction"]').forEach(radio => {
-    radio.addEventListener("change", (e) => {
+    radio.addEventListener("change", function(e) {
         state.direction = e.target.value;
+        console.log("Direction changed to:", state.direction);
         updateMap();
     });
 });
