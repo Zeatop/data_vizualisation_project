@@ -14,15 +14,14 @@
 </head>
 <body>
 
-<div id="app-container">
+<div class="map-card-wrapper">
+    <div class="map-card">
+        <h2 class="chart-card-title">🗺️ Réseau de vols - Analyse géographique</h2>
+        
+        <div id="app-container">
 
     <header id="control-panel">
-        <div class="brand">
-            <h2>Flight Map</h2>
-        </div>
-
         <div class="controls-row">
-
             <div class="control-group">
                 <label>MODE</label>
                 <select id="dataset-select" class="styled-select">
@@ -52,13 +51,6 @@
                 </select>
             </div>
 
-            <div class="control-group">
-                <label>FOCUS CITY</label>
-                <select id="city-search" class="styled-select">
-                    <option value="">Show All Routes</option>
-                </select>
-            </div>
-
             <div id="direction-controls" class="control-group hidden">
                 <label>DIRECTION</label>
                 <div class="toggle-group">
@@ -77,10 +69,6 @@
                 </div>
             </div>
 
-            <div class="control-group">
-                <label>&nbsp;</label> <button id="reset-btn" class="btn-secondary">Reset</button>
-            </div>
-
         </div>
     </header>
 
@@ -88,6 +76,8 @@
         <div id="tooltip" class="tooltip hidden"></div>
     </main>
 
+    </div>
+    </div>
 </div>
 
 <script src="script.js"></script>

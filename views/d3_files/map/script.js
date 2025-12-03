@@ -304,11 +304,50 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
 
         const cityList = Object.keys(state.lookup).sort();
         const select = document.getElementById("city-search");
-        cityList.forEach(city => {
-            const option = document.createElement("option");
-            option.value = city;
-            option.text = city;
-            select.appendChild(option);
+        if (select) {
+            cityList.forEach(city => {
+                const opt = document.createElement("option");
+                opt.value = city;
+                opt.textContent = city;
+                select.appendChild(opt);
+            });
+        }
+
+        // Écouter les messages du parent pour mettre à jour la ville sélectionnée
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'updateMapCity') {
+                const cityName = event.data.city;
+                if (cityName && cityName !== 'All') {
+                    selectCity(cityName);
+                } else {
+                    resetView();
+                }
+            }
+            
+            if (event.data.type === 'updateMapPeriod') {
+                const period = event.data.period; // 'month' or 'week'
+                const datasetSelect = document.getElementById('dataset-select');
+                if (datasetSelect && period) {
+                    datasetSelect.value = period;
+                    state.mode = period;
+                    
+                    const isLate = state.mode === "late";
+                    document.getElementById("time-controls").classList.toggle("hidden", isLate);
+                    document.getElementById("late-controls").classList.toggle("hidden", !isLate);
+
+                    if (state.mode === "month") {
+                        document.getElementById("time-label").textContent = "MONTH";
+                        document.getElementById("time-slider").max = 12;
+                        state.timeValue = Math.min(state.timeValue, 12);
+                        updateTimeDisplay();
+                    } else if (state.mode === "week") {
+                        document.getElementById("time-label").textContent = "WEEK";
+                        document.getElementById("time-slider").max = 52;
+                        updateTimeDisplay();
+                    }
+                    updateMap();
+                }
+            }
         });
 
         updateMap();
@@ -384,7 +423,8 @@ function updateMap() {
         });
 
     // Phase 3.1 : Délégation d'événements (un seul listener au lieu de milliers)
-    gRoutes.on("mouseover", function(event) {
+    gRoutes.on("mouseover", function() {
+        const event = d3.event;
         const target = event.target;
         if (target.tagName === 'path') {
             const d = d3.select(target).datum();
@@ -395,7 +435,8 @@ function updateMap() {
         }
     });
 
-    gRoutes.on("mouseout", function(event) {
+    gRoutes.on("mouseout", function() {
+        const event = d3.event;
         const target = event.target;
         if (target.tagName === 'path') {
             d3.select(target).attr("stroke-width", null).attr("stroke", null);
@@ -423,14 +464,20 @@ function updateMap() {
 // 7. ACTIONS
 function selectCity(cityName) {
     state.selectedCity = cityName;
-    document.getElementById("city-search").value = cityName;
+    const citySearchEl = document.getElementById("city-search");
+    if (citySearchEl) {
+        citySearchEl.value = cityName;
+    }
     document.getElementById("direction-controls").classList.remove("hidden");
     updateMap();
 }
 
 function resetView() {
     state.selectedCity = null;
-    document.getElementById("city-search").value = "";
+    const citySearchEl = document.getElementById("city-search");
+    if (citySearchEl) {
+        citySearchEl.value = "";
+    }
     document.getElementById("direction-controls").classList.add("hidden");
     state.direction = 'all';
     document.querySelector('input[name="direction"][value="all"]').checked = true;
@@ -462,9 +509,30 @@ function hideTooltip() {
     tooltip.classed("hidden", true);
 }
 
+function updateTimeDisplay() {
+    const display = document.getElementById("time-display");
+    if (state.mode === "month") {
+        const date = new Date(2023, state.timeValue - 1, 1);
+        display.textContent = date.toLocaleString('default', { month: 'long' });
+    } else {
+        display.textContent = "Week " + state.timeValue;
+    }
+}
+
+function updateTimeDisplay() {
+    const display = document.getElementById("time-display");
+    if (state.mode === "month") {
+        const months = ["January","February","March","April","May","June",
+                       "July","August","September","October","November","December"];
+        display.textContent = months[state.timeValue - 1] || "January";
+    } else {
+        display.textContent = `Week ${state.timeValue}`;
+    }
+}
+
 
 // 8. EVENT LISTENERS
-document.getElementById("dataset-select").addEventListener("change", (e) => {
+document.getElementById("dataset-select").addEventListener("change", function(e) {
     state.mode = e.target.value;
     const isLate = state.mode === "late";
     document.getElementById("time-controls").classList.toggle("hidden", isLate);
@@ -488,33 +556,21 @@ document.getElementById("dataset-select").addEventListener("change", (e) => {
     updateMap();
 });
 
-document.getElementById("time-slider").addEventListener("input", (e) => {
+document.getElementById("time-slider").addEventListener("input", function(e) {
     state.timeValue = +e.target.value;
-    const display = document.getElementById("time-display");
-    if (state.mode === "month") {
-        const date = new Date(2023, state.timeValue - 1, 1);
-        display.textContent = date.toLocaleString('default', { month: 'long' });
-    } else {
-        display.textContent = "Week " + state.timeValue;
-    }
+    updateTimeDisplay();
     updateMap();
 });
 
-document.getElementById("delay-select").addEventListener("change", (e) => {
+document.getElementById("delay-select").addEventListener("change", function(e) {
     state.lateFilter = e.target.value;
     updateMap();
 });
 
-document.getElementById("city-search").addEventListener("change", (e) => {
-    if(e.target.value) selectCity(e.target.value);
-    else resetView();
-});
-
-document.getElementById("reset-btn").addEventListener("click", resetView);
-
 document.querySelectorAll('input[name="direction"]').forEach(radio => {
-    radio.addEventListener("change", (e) => {
+    radio.addEventListener("change", function(e) {
         state.direction = e.target.value;
+        console.log("Direction changed to:", state.direction);
         updateMap();
     });
 });
