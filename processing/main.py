@@ -8,7 +8,7 @@ project_dir = os.getcwd()
 
 folder_list = []
 # Specify your desired folder
-data_folder = "../flightData"
+data_folder = os.path.join(project_dir, "flightData")
 folder_list.append(data_folder)
 
 #folders for each persons
@@ -32,8 +32,7 @@ dl_ds.download_dataset(data_folder)
 
 
 sample_table_path = os.path.join(project_dir, data_folder + "/flight_data_2024_sample.csv")
-table_path = os.path.join(project_dir, data_folder + "/flight_data_2024_sample.csv")
-#table_path = os.path.join(project_dir, data_folder + "/flight_data_2024.csv")
+table_path = os.path.join(project_dir, data_folder + "/flight_data_2024.csv")
 # TODO : review this bloc above if we switch data set become very a lot
 
 sample_table = pandas.read_csv(sample_table_path, delimiter=',')
