@@ -1,0 +1,16 @@
+carrier_name,bool_carrier_delay_min,bool_weather_delay_min,bool_traffic_delay_min,bool_security_delay_min,bool_late_aircraft_delay_min,is_late,cancelled,flight_number
+Alaska Airlines,14,1,27,0,23,62,5,323
+Allegiant Air,7,6,20,0,20,47,2,172
+American Airlines,99,21,97,0,194,370,22,1385
+Delta Air Lines,92,8,60,0,90,241,9,1459
+Endeavor Air,15,3,11,0,17,37,6,278
+Envoy Air,14,4,25,1,33,71,4,406
+Frontier Airlines,27,2,25,0,44,84,7,295
+Hawaiian Airlines,6,0,0,0,1,8,1,95
+JetBlue Airways,35,4,27,1,33,85,1,331
+PSA Airlines,21,5,20,0,40,78,9,326
+Republic Airways,13,1,26,0,13,46,6,434
+SkyWest Airlines,98,28,46,0,34,204,9,1080
+Southwest Airlines,94,9,96,1,210,409,20,2022
+Spirit Airlines,20,3,45,0,17,80,10,361
+United Airlines,69,9,77,0,82,218,11,1033

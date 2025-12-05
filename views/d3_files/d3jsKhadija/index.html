@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualisation Retards / Annulations</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Retards et annulations – Stacked Bar Charts (D3.js)</h1>
+
+<!-- ----------------- CHART 1 : TEMPOREL ----------------- -->
+<div class="chart-container">
+    <h2>Vue temporelle (mois / semaine)</h2>
+
+    <div class="controls">
+        <div>
+            <label for="time-granularity">Granularité :</label>
+            <select id="time-granularity">
+                <option value="month">Par mois</option>
+                <option value="week">Par semaine</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="time-mode">Mode :</label>
+            <select id="time-mode">
+                <option value="count">Quantité (nombre de vols)</option>
+                <option value="rate">Taux (%)</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="time-chart"></div>
+</div>
+
+<!-- ----------------- CHART 2 : TYPES DE RETARD ----------------- -->
+<div class="chart-container">
+    <h2>Répartition des types de retards par compagnie</h2>
+
+    <div class="controls">
+        <div>
+            <label for="delay-mode">Mode :</label>
+            <select id="delay-mode">
+                <option value="count">Quantité (nombre de vols)</option>
+                <option value="rate">Taux (%) parmi les vols en retard</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="delay-chart"></div>
+</div>
+
+<!-- Import D3.js (version 7) -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<script src="script.js">
+</script>
+</body>
+</html>
