@@ -24,7 +24,6 @@
     background: white;
     border-radius: 15px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    overflow: hidden;
   }
   
   .header {
@@ -32,6 +31,7 @@
     color: white;
     padding: 30px;
     text-align: center;
+    border-radius: 15px 15px 0 0;
   }
   
   .header h1 {
@@ -54,6 +54,10 @@
     gap: 30px;
     align-items: center;
     justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
   
   .control-group {
@@ -121,6 +125,7 @@
     padding: 25px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     border: 1px solid #e0e0e0;
+    position: relative;
   }
   
   .chart-card-title {
@@ -203,6 +208,81 @@
     color: #333;
     user-select: none;
   }
+  
+  .sub-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .sub-card {
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e0e0e0;
+  }
+  
+  .sub-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+  }
+  
+  .delay-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    position: sticky;
+    top: 95px;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  
+  .delay-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: white;
+    border: 2px solid transparent;
+  }
+  
+  .delay-filter-item:hover {
+    background: #f0f0f0;
+    transform: translateY(-1px);
+  }
+  
+  .delay-filter-item input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .delay-filter-color {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 2px solid rgba(0,0,0,0.1);
+  }
+  
+  .delay-filter-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    user-select: none;
+  }
 </style>
 </head>
 <body>
@@ -238,7 +318,7 @@
     </div>
     
     <div class="control-group" id="time-selector-group">
-      <label for="timeSelect" class="main-label">Sélection : :</label>
+      <label for="timeSelect" class="main-label">Sélection : </label>
       <select id="timeSelect">
         <option value="1">Janvier</option>
         <option value="2">Février</option>
@@ -253,27 +333,6 @@
         <option value="11">Novembre</option>
         <option value="12">Décembre</option>
       </select>
-    </div>
-    
-    <div class="control-group">
-      <label for="mapCityFilter" class="main-label">Ville focus :</label>
-      <select id="mapCityFilter">
-        <option value="">Toutes les villes</option>
-      </select>
-    </div>
-    
-    <div class="control-group">
-      <label class="main-label">Affichage :</label>
-      <div class="radio-group">
-        <label>
-          <input type="radio" name="viewMode" value="count" checked>
-          <span>Nombre</span>
-        </label>
-        <label>
-          <input type="radio" name="viewMode" value="percentage">
-          <span>Pourcentage</span>
-        </label>
-      </div>
     </div>
   </div>
   
@@ -291,10 +350,82 @@
         <iframe src="map/index.html" id="map-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
       </div>
     </div>
-    <!-- Streamgraph Card -->
+    <!-- Temporal Analysis Card with Sub-cards -->
     <div class="chart-card">
-      <div style="width: 100%; height: 750px; border: none; border-radius: 8px; overflow: hidden;">
-        <iframe src="streamchart/index.html" id="streamchart-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
+      <div class="chart-card-title">📈 Analyse temporelle des retards</div>
+      
+      <!-- Filtres des types de retard -->
+      <div class="delay-filters" id="delay-filters">
+        <div class="delay-filter-item" data-key="carrier">
+          <input type="checkbox" id="filter-carrier" checked>
+          <div class="delay-filter-color" style="background-color: #1b9e77;"></div>
+          <label for="filter-carrier" class="delay-filter-label">Retard Compagnie</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="weather">
+          <input type="checkbox" id="filter-weather" checked>
+          <div class="delay-filter-color" style="background-color: #d95f02;"></div>
+          <label for="filter-weather" class="delay-filter-label">Retard Météo</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="traffic">
+          <input type="checkbox" id="filter-traffic" checked>
+          <div class="delay-filter-color" style="background-color: #7570b3;"></div>
+          <label for="filter-traffic" class="delay-filter-label">Retard Trafic</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="security">
+          <input type="checkbox" id="filter-security" checked>
+          <div class="delay-filter-color" style="background-color: #e7298a;"></div>
+          <label for="filter-security" class="delay-filter-label">Retard Sécurité</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="late_aircraft">
+          <input type="checkbox" id="filter-aircraft" checked>
+          <div class="delay-filter-color" style="background-color: #66a61e;"></div>
+          <label for="filter-aircraft" class="delay-filter-label">Retard Avion Précédent</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="ontime">
+          <input type="checkbox" id="filter-ontime">
+          <div class="delay-filter-color" style="background-color: #e6ab02;"></div>
+          <label for="filter-ontime" class="delay-filter-label">À l'heure</label>
+        </div>
+        
+        <!-- Séparateur vertical -->
+        <div style="width: 2px; background: #cbd5e1; margin: 0 10px;"></div>
+        
+        <!-- Filtre Affichage intégré -->
+        <div class="control-group">
+          <label class="main-label">Affichage :</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="viewMode" value="count" checked>
+              <span>Nombre</span>
+            </label>
+            <label>
+              <input type="radio" name="viewMode" value="percentage">
+              <span>Pourcentage</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sub-cards-container">
+        <!-- Streamgraph Sub-card -->
+        <div class="sub-card">
+          <div class="sub-card-title">Évolution par type de retard</div>
+          <div style="width: 100%; height: 650px; border: none; border-radius: 8px; overflow: hidden;">
+            <iframe src="streamchart/index.html" id="streamchart-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
+          </div>
+        </div>
+        <!-- Stacked Bar Chart Sub-card -->
+        <div class="sub-card">
+          <div class="sub-card-title">Performance des compagnies</div>
+          <div style="width: 100%; height: 650px; border: none; border-radius: 8px; overflow: hidden;">
+            <iframe src="stackedbarchart/index.html" id="stackedbarchart-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
+          </div>
+        </div>
       </div>
     </div>
     <!-- Treemap Card -->
@@ -332,8 +463,8 @@ window.addEventListener('DOMContentLoaded', function() {
   const iframe = document.getElementById('streamchart-iframe');
   const mapIframe = document.getElementById('map-iframe');
   const treemapIframe = document.getElementById('treemap-iframe');
+  const stackedbarchartIframe = document.getElementById('stackedbarchart-iframe');
   const citySelect = document.getElementById('citySelect');
-  const mapCityFilter = document.getElementById('mapCityFilter');
   const timeSelect = document.getElementById('timeSelect');
   const timePeriodRadios = document.querySelectorAll('input[name="timePeriod"]');
   const viewModeRadios = document.querySelectorAll('input[name="viewMode"]');
@@ -341,27 +472,25 @@ window.addEventListener('DOMContentLoaded', function() {
   // Fonction pour envoyer les paramètres à l'iframe
   function sendUpdateToIframe() {
     const selectedCity = citySelect.value;
-    const selectedMapCity = mapCityFilter.value;
     const selectedPeriod = document.querySelector('input[name="timePeriod"]:checked').value;
     const selectedMode = document.querySelector('input[name="viewMode"]:checked').value;
     const selectedTime = timeSelect.value;
     
     // Attendre que les iframes soient chargées
     setTimeout(() => {
-      // Envoyer au streamchart - utiliser mapCityFilter pour le filtrage
-      // Si mapCityFilter est vide (toutes les villes), utiliser "All"
-      const streamchartCity = selectedMapCity === '' ? 'All' : selectedMapCity;
+      // Envoyer au streamchart - utiliser citySelect pour le filtrage
       iframe.contentWindow.postMessage({
         type: 'updateStreamchart',
-        city: streamchartCity,
+        city: selectedCity,
         period: selectedPeriod,
         mode: selectedMode
       }, '*');
       
-      // Envoyer la ville de focus à la carte
+      // Envoyer la ville de focus à la carte (vide si "All")
+      const mapCity = selectedCity === 'All' ? '' : selectedCity;
       mapIframe.contentWindow.postMessage({
         type: 'updateMapCity',
-        city: selectedMapCity
+        city: mapCity
       }, '*');
       
       // Envoyer la période et la valeur temporelle sélectionnée à la carte
@@ -376,6 +505,14 @@ window.addEventListener('DOMContentLoaded', function() {
         type: 'updateTreemap',
         period: selectedPeriod,
         timeValue: selectedTime
+      }, '*');
+      
+      // Envoyer la période et la valeur temporelle au stacked bar chart
+      stackedbarchartIframe.contentWindow.postMessage({
+        type: 'updateStackedBarChart',
+        period: selectedPeriod,
+        timeValue: selectedTime,
+        mode: selectedMode
       }, '*');
     }, 100);
   }
@@ -411,7 +548,6 @@ window.addEventListener('DOMContentLoaded', function() {
   
   // Écouter les changements des contrôles
   citySelect.addEventListener('change', sendUpdateToIframe);
-  mapCityFilter.addEventListener('change', sendUpdateToIframe);
   timeSelect.addEventListener('change', sendUpdateToIframe);
   
   timePeriodRadios.forEach(radio => {
@@ -422,9 +558,36 @@ window.addEventListener('DOMContentLoaded', function() {
     radio.addEventListener('change', sendUpdateToIframe);
   });
   
+  // Écouter les changements des filtres de types de retard
+  const delayFilters = document.querySelectorAll('.delay-filter-item input[type="checkbox"]');
+  delayFilters.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const enabledDelayTypes = {
+        carrier: document.getElementById('filter-carrier').checked,
+        weather: document.getElementById('filter-weather').checked,
+        traffic: document.getElementById('filter-traffic').checked,
+        security: document.getElementById('filter-security').checked,
+        late_aircraft: document.getElementById('filter-aircraft').checked,
+        ontime: document.getElementById('filter-ontime').checked
+      };
+      
+      // Envoyer aux deux iframes
+      iframe.contentWindow.postMessage({
+        type: 'updateDelayFilters',
+        enabledDelayTypes: enabledDelayTypes
+      }, '*');
+      
+      stackedbarchartIframe.contentWindow.postMessage({
+        type: 'updateDelayFilters',
+        enabledDelayTypes: enabledDelayTypes
+      }, '*');
+    });
+  });
+  
   // Recevoir la liste des villes depuis l'iframe
   window.addEventListener('message', function(event) {
-    if (event.data.type === 'citiesLoaded') {
+    if (event.data.type === 'citiesLoaded' || event.data.type === 'mapCitiesLoaded') {
+      // Utiliser le même dropdown pour les villes du streamchart et de la map
       citySelect.innerHTML = '<option value="All">🌍 Toutes les villes</option>';
       event.data.cities.forEach(city => {
         const option = document.createElement('option');
@@ -433,16 +596,6 @@ window.addEventListener('DOMContentLoaded', function() {
         citySelect.appendChild(option);
       });
       citySelect.value = 'All';
-    }
-    
-    if (event.data.type === 'mapCitiesLoaded') {
-      mapCityFilter.innerHTML = '<option value="">Toutes les villes</option>';
-      event.data.cities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        option.textContent = city;
-        mapCityFilter.appendChild(option);
-      });
     }
   });
 });

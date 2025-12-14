@@ -10,7 +10,7 @@ const config = {
         traffic: "#7570b3",         // Retard Trafic
         security: "#e7298a",        // Retard Sécurité
         late_aircraft: "#66a61e",   // Retard Avion Précédent
-        ontime: "#10b981"           // Vert pour à l'heure
+        ontime: "#e6ab02"           // Jaune pour à l'heure (cohérent avec les autres charts)
     },
     delayTypes: [
         { key: 'bool_carrier_delay_min', name: 'Retard Compagnie', color: 'carrier' },

@@ -354,9 +354,25 @@ Promise.all([
     if (event.data.type === 'updateStreamchart') {
       updateCharts(event.data.city, event.data.mode, event.data.period);
     }
+    
+    if (event.data.type === 'updateDelayFilters') {
+      // Convertir le format du parent vers le format du streamchart
+      const filters = event.data.enabledDelayTypes;
+      activeDelayTypes = {
+        'bool_carrier_delay_min': filters.carrier,
+        'bool_weather_delay_min': filters.weather,
+        'bool_traffic_delay_min': filters.traffic,
+        'bool_security_delay_min': filters.security,
+        'bool_late_aircraft_delay_min': filters.late_aircraft,
+        'on_time_flights': filters.ontime
+      };
+      
+      // Redessiner avec les paramètres actuels
+      updateCharts(currentCity || "All", currentMode || "count", currentPeriod || "month");
+    }
   });
   
-  // Écouter les changements des checkboxes de la légende
+  // Écouter les changements des checkboxes de la légende (si elles existent localement)
   d3.selectAll('.legend-item input[type="checkbox"]').on("change", function() {
     const legendItem = d3.select(this.parentNode);
     const key = legendItem.attr('data-key');

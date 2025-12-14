@@ -77,34 +77,10 @@ table.to_csv(path, index=False)
 Agrégations pour Kadija
 '''
 
-# Agréger les données par semaine et par compagnie aérienne
+# Agréger les données par semaine et par compagnie aérienne avec types de retard
 agregated_data = data_prep.agregate_data(
     data=table,
     group_by_columns=['week_number', 'carrier_name'],
-    agg_dict={
-        'is_late': 'sum',
-        'cancelled': 'sum',
-        'flight_number': 'count'
-    },
-    filepath=f"{data_folder_khadija}/aggregated_by_week_and_carrier.csv"
-)
-
-# Agréger les données par mois et par compagnie aérienne
-agregated_data = data_prep.agregate_data(
-    data=table,
-    group_by_columns=['month', 'carrier_name'],
-    agg_dict={
-        'is_late': 'sum',
-        'cancelled': 'sum',
-        'flight_number': 'count'
-    },
-    filepath=f"{data_folder_khadija}/aggregated_by_month_and_carrier.csv"
-)
-
-# Agréger les données par type de retard et par compagnie aérienne
-agregated_data = data_prep.agregate_data(
-    data=table,
-    group_by_columns=['carrier_name'],
     agg_dict={
         'bool_carrier_delay_min': 'sum',
         'bool_weather_delay_min': 'sum',
@@ -115,7 +91,24 @@ agregated_data = data_prep.agregate_data(
         'cancelled': 'sum',
         'flight_number': 'count'
     },
-    filepath=f"{data_folder_khadija}/aggregated_by_late_type_and_carrier.csv"
+    filepath=f"{data_folder_khadija}/aggregated_by_week_and_carrier.csv"
+)
+
+# Agréger les données par mois et par compagnie aérienne avec types de retard
+agregated_data = data_prep.agregate_data(
+    data=table,
+    group_by_columns=['month', 'carrier_name'],
+    agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
+        'is_late': 'sum',
+        'cancelled': 'sum',
+        'flight_number': 'count'
+    },
+    filepath=f"{data_folder_khadija}/aggregated_by_month_and_carrier.csv"
 )
 
 '''

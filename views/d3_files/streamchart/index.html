@@ -12,47 +12,6 @@
 <div class="charts-container">
     <!-- Streamgraph Card -->
     <div class="chart-card">
-      <h2 class="chart-card-title">📈 Streamgraph - Distribution des retards par ville</h2>
-      
-      <!-- Légende interactive -->
-      <div class="legend-container" id="legend-container">
-        <div class="legend-item" data-key="bool_carrier_delay_min">
-          <input type="checkbox" id="legend-carrier" checked>
-          <div class="legend-color" style="background-color: #1b9e77;"></div>
-          <label for="legend-carrier" class="legend-label">Retard Compagnie</label>
-        </div>
-        
-        <div class="legend-item" data-key="bool_weather_delay_min">
-          <input type="checkbox" id="legend-weather" checked>
-          <div class="legend-color" style="background-color: #d95f02;"></div>
-          <label for="legend-weather" class="legend-label">Retard Météo</label>
-        </div>
-        
-        <div class="legend-item" data-key="bool_traffic_delay_min">
-          <input type="checkbox" id="legend-traffic" checked>
-          <div class="legend-color" style="background-color: #7570b3;"></div>
-          <label for="legend-traffic" class="legend-label">Retard Trafic</label>
-        </div>
-        
-        <div class="legend-item" data-key="bool_security_delay_min">
-          <input type="checkbox" id="legend-security" checked>
-          <div class="legend-color" style="background-color: #e7298a;"></div>
-          <label for="legend-security" class="legend-label">Retard Sécurité</label>
-        </div>
-        
-        <div class="legend-item" data-key="bool_late_aircraft_delay_min">
-          <input type="checkbox" id="legend-aircraft" checked>
-          <div class="legend-color" style="background-color: #66a61e;"></div>
-          <label for="legend-aircraft" class="legend-label">Retard Avion Précédent</label>
-        </div>
-        
-        <div class="legend-item" data-key="on_time_flights" id="legend-ontime-container">
-          <input type="checkbox" id="legend-ontime">
-          <div class="legend-color" style="background-color: #e6ab02;"></div>
-          <label for="legend-ontime" class="legend-label">Vols ponctuels</label>
-        </div>
-      </div>
-      
       <div class="charts-wrapper">
         <div class="chart-box" id="streamchart-origin"></div>
         <div class="chart-box" id="streamchart-dest"></div>
