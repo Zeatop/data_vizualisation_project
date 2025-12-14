@@ -26,3 +26,5 @@ lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lorem ipsumm lo
 ```shell
     py -m http.server 8000
 ```
+
+Taper dans la barre de recherche: http://localhost:8000/views/d3_files/main.html

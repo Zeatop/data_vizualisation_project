@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyse des retards de vols - 2024</title>
+<link rel="stylesheet" href="main_style.css">
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>📊 Analyse des Retards de Vols - 2024</h1>
+    <p>Visualisations interactives des données de vols</p>
+  </div>
+  
+  <!-- Controls -->
+  <div class="controls">
+    <div class="control-group">
+      <label for="citySelect" class="main-label">Ville :</label>
+      <select id="citySelect">
+        <option value="">Chargement...</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label class="main-label">Période :</label>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="timePeriod" value="month" checked>
+          <span>Par mois</span>
+        </label>
+        <label>
+          <input type="radio" name="timePeriod" value="week">
+          <span>Par semaine</span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="control-group" id="time-selector-group">
+      <label for="timeSelect" class="main-label">Sélection : </label>
+      <select id="timeSelect">
+        <option value="1">Janvier</option>
+        <option value="2">Février</option>
+        <option value="3">Mars</option>
+        <option value="4">Avril</option>
+        <option value="5">Mai</option>
+        <option value="6">Juin</option>
+        <option value="7">Juillet</option>
+        <option value="8">Août</option>
+        <option value="9">Septembre</option>
+        <option value="10">Octobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Décembre</option>
+      </select>
+    </div>
+  </div>
+  
+  <!-- Charts -->
+  <div class="charts-container">
+    <!-- Flight Map Card -->
+    <div class="chart-card" style="margin-top: 30px;">
+      <div class="chart-card-title" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleMapVisibility()">
+        <span>🗺️ Réseau de vols - Analyse géographique</span>
+        <button id="map-toggle-btn" style="background: #667eea; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s;">
+          👁️ Masquer
+        </button>
+      </div>
+      <div id="map-container" style="width: 100%; height: 700px; border: none; border-radius: 8px; overflow: hidden;">
+        <iframe src="map/index.html" id="map-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
+      </div>
+    </div>
+    <!-- Temporal Analysis Card with Sub-cards -->
+    <div class="chart-card">
+      <div class="chart-card-title">📈 Evolution des types de retard dans le temps et par ville ou par compagnie aérienne</div>
+      
+      <!-- Filtres des types de retard -->
+      <div class="delay-filters" id="delay-filters">
+        <div class="delay-filter-item" data-key="carrier">
+          <input type="checkbox" id="filter-carrier" checked>
+          <div class="delay-filter-color" style="background-color: #1b9e77;"></div>
+          <label for="filter-carrier" class="delay-filter-label">Retard Compagnie</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="weather">
+          <input type="checkbox" id="filter-weather" checked>
+          <div class="delay-filter-color" style="background-color: #d95f02;"></div>
+          <label for="filter-weather" class="delay-filter-label">Retard Météo</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="traffic">
+          <input type="checkbox" id="filter-traffic" checked>
+          <div class="delay-filter-color" style="background-color: #7570b3;"></div>
+          <label for="filter-traffic" class="delay-filter-label">Retard Trafic</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="security">
+          <input type="checkbox" id="filter-security" checked>
+          <div class="delay-filter-color" style="background-color: #e7298a;"></div>
+          <label for="filter-security" class="delay-filter-label">Retard Sécurité</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="late_aircraft">
+          <input type="checkbox" id="filter-aircraft" checked>
+          <div class="delay-filter-color" style="background-color: #66a61e;"></div>
+          <label for="filter-aircraft" class="delay-filter-label">Retard Avion Précédent</label>
+        </div>
+        
+        <div class="delay-filter-item" data-key="ontime">
+          <input type="checkbox" id="filter-ontime">
+          <div class="delay-filter-color" style="background-color: #e6ab02;"></div>
+          <label for="filter-ontime" class="delay-filter-label">À l'heure</label>
+        </div>
+        
+        <!-- Séparateur vertical -->
+        <div style="width: 2px; background: #cbd5e1; margin: 0 10px;"></div>
+        
+        <!-- Filtre Affichage intégré -->
+        <div class="control-group">
+          <label class="main-label">Affichage :</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="viewMode" value="count" checked>
+              <span>Nombre</span>
+            </label>
+            <label>
+              <input type="radio" name="viewMode" value="percentage">
+              <span>Pourcentage</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sub-cards-container">
+        <!-- Streamgraph Sub-card -->
+        <div class="sub-card">
+          <div class="sub-card-title">Évolution dans le temps et par ville des types de retard</div>
+          <div style="width: 100%; height: 650px; border: none; border-radius: 8px; overflow: hidden;">
+            <iframe src="streamchart/index.html" id="streamchart-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
+          </div>
+        </div>
+        <!-- Stacked Bar Chart Sub-card -->
+        <div class="sub-card">
+          <div class="sub-card-title">Performance des compagnies aériennes</div>
+          <div style="width: 100%; height: 650px; border: none; border-radius: 8px; overflow: hidden;">
+            <iframe src="stackedbarchart/index.html" id="stackedbarchart-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Treemap Card -->
+    <div class="chart-card">
+      <div style="width: 100%; height: 750px; border: none; border-radius: 8px; overflow: hidden;">
+        <iframe src="treemap/index.html" id="treemap-iframe" style="width: 100%; height: 100%; border: none; overflow: hidden;" scrolling="no"></iframe>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="main_script.js"></script>
+
+</body>
+</html>
