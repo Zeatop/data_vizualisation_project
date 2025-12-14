@@ -122,34 +122,10 @@ agregated_data = data_prep.agregate_data(
 Agrégations pour Delphine
 '''
 
-# Agréger les données par semaine et par catégorie de distance
+# Agréger les données par semaine et par catégorie de distance avec types de retard
 agregated_data = data_prep.agregate_data(
     data=table,
     group_by_columns=['week_number', 'distance_category'],
-    agg_dict={
-        'is_late': 'sum',
-        'cancelled': 'sum',
-        'flight_number': 'count'
-    },
-    filepath=f"{data_folder_delphine}/aggregated_by_week_and_distance_category.csv"
-)
-
-# Agréger les données par mois et par catégorie de distance
-agregated_data = data_prep.agregate_data(
-    data=table,
-    group_by_columns=['month', 'distance_category'],
-    agg_dict={
-        'is_late': 'sum',
-        'cancelled': 'sum',
-        'flight_number': 'count'
-    },
-    filepath=f"{data_folder_delphine}/aggregated_by_month_and_distance_category.csv"
-)
-
-# Agréger les données par type de retard et par catégorie de distance
-agregated_data = data_prep.agregate_data(
-    data=table,
-    group_by_columns=['distance_category'],
     agg_dict={
         'bool_carrier_delay_min': 'sum',
         'bool_weather_delay_min': 'sum',
@@ -160,7 +136,24 @@ agregated_data = data_prep.agregate_data(
         'cancelled': 'sum',
         'flight_number': 'count'
     },
-    filepath=f"{data_folder_delphine}/aggregated_by_late_type_and_distance_category.csv"
+    filepath=f"{data_folder_delphine}/aggregated_by_week_and_distance_category.csv"
+)
+
+# Agréger les données par mois et par catégorie de distance avec types de retard
+agregated_data = data_prep.agregate_data(
+    data=table,
+    group_by_columns=['month', 'distance_category'],
+    agg_dict={
+        'bool_carrier_delay_min': 'sum',
+        'bool_weather_delay_min': 'sum',
+        'bool_traffic_delay_min': 'sum',
+        'bool_security_delay_min': 'sum',
+        'bool_late_aircraft_delay_min': 'sum',
+        'is_late': 'sum',
+        'cancelled': 'sum',
+        'flight_number': 'count'
+    },
+    filepath=f"{data_folder_delphine}/aggregated_by_month_and_distance_category.csv"
 )
 
 

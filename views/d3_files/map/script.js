@@ -323,26 +323,21 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
                 hideTooltip();
             });
 
-        // Peupler le dropdown de villes triées par volume de vols
-        const cityFilterSelect = document.getElementById("city-filter");
-        if (cityFilterSelect) {
-            const sortedCities = Object.keys(state.lookup)
-                .filter(cityName => cityCounts[cityName] > 0)
-                .sort((a, b) => cityCounts[b] - cityCounts[a]);
-            
-            sortedCities.forEach(city => {
-                const opt = document.createElement("option");
-                opt.value = city;
-                opt.textContent = city;
-                cityFilterSelect.appendChild(opt);
-            });
-        }
+        // Envoyer la liste des villes triées au parent
+        const sortedCities = Object.keys(state.lookup)
+            .filter(cityName => cityCounts[cityName] > 0)
+            .sort((a, b) => cityCounts[b] - cityCounts[a]);
+        
+        window.parent.postMessage({
+            type: 'mapCitiesLoaded',
+            cities: sortedCities
+        }, '*');
 
         // Écouter les messages du parent pour mettre à jour la ville sélectionnée
         window.addEventListener('message', function(event) {
             if (event.data.type === 'updateMapCity') {
                 const cityName = event.data.city;
-                if (cityName && cityName !== 'All') {
+                if (cityName && cityName !== '') {
                     selectCity(cityName);
                 } else {
                     resetView();
@@ -351,31 +346,19 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
             
             if (event.data.type === 'updateMapPeriod') {
                 const period = event.data.period; // 'month' or 'week'
+                const timeValue = event.data.timeValue; // numéro
+                
                 if (period) {
                     state.mode = period;
                     
-                    const isMonth = state.mode === "month";
-                    const isWeek = state.mode === "week";
-                    
-                    document.getElementById("time-controls").classList.toggle("hidden", !isMonth);
-                    document.getElementById("week-controls").classList.toggle("hidden", !isWeek);
-
-                    if (state.mode === "month") {
-                        state.timeValue = Math.min(state.timeValue, 12);
-                        document.getElementById("time-select").value = state.timeValue;
-                    } else if (state.mode === "week") {
-                        state.timeValue = Math.min(state.timeValue, 52);
-                        document.getElementById("week-select").value = state.timeValue;
+                    if (timeValue !== undefined) {
+                        state.timeValue = +timeValue;
                     }
                     
                     // Préserver la ville sélectionnée et les contrôles de direction
                     if (state.selectedCity) {
                         document.getElementById("direction-controls").classList.remove("hidden");
                         document.getElementById("legend-directions").classList.remove("hidden");
-                        const cityFilterEl = document.getElementById("city-filter");
-                        if (cityFilterEl) {
-                            cityFilterEl.value = state.selectedCity;
-                        }
                     }
                     
                     updateMap();
@@ -391,11 +374,11 @@ function updateMap() {
     // Phase 1.1 : Utiliser les datasets précalculés (pas de filtrage répété)
     let dataset = [];
     if (state.mode === "month") {
-        dataset = state.dataByMonth[state.timeValue];
+        dataset = state.dataByMonth[state.timeValue] || [];
     } else if (state.mode === "week") {
-        dataset = state.dataByWeek[state.timeValue];
+        dataset = state.dataByWeek[state.timeValue] || [];
     } else {
-        dataset = state.dataByLateType[state.lateFilter];
+        dataset = state.dataByLateType[state.lateFilter] || [];
     }
 
     let displayData = [];
@@ -492,10 +475,6 @@ function updateMap() {
 // 7. ACTIONS
 function selectCity(cityName) {
     state.selectedCity = cityName;
-    const cityFilterEl = document.getElementById("city-filter");
-    if (cityFilterEl) {
-        cityFilterEl.value = cityName;
-    }
     document.getElementById("direction-controls").classList.remove("hidden");
     document.getElementById("legend-directions").classList.remove("hidden");
     updateMap();
@@ -503,10 +482,6 @@ function selectCity(cityName) {
 
 function resetView() {
     state.selectedCity = null;
-    const cityFilterEl = document.getElementById("city-filter");
-    if (cityFilterEl) {
-        cityFilterEl.value = "";
-    }
     document.getElementById("direction-controls").classList.add("hidden");
     document.getElementById("legend-directions").classList.add("hidden");
     state.direction = 'all';
@@ -540,25 +515,6 @@ function hideTooltip() {
 }
 
 // 8. EVENT LISTENERS
-document.getElementById("time-select").addEventListener("change", function(e) {
-    state.timeValue = +e.target.value;
-    updateMap();
-});
-
-document.getElementById("week-select").addEventListener("change", function(e) {
-    state.timeValue = +e.target.value;
-    updateMap();
-});
-
-document.getElementById("city-filter").addEventListener("change", function(e) {
-    const cityName = e.target.value;
-    if (cityName === "") {
-        resetView();
-    } else {
-        selectCity(cityName);
-    }
-});
-
 document.getElementById("delay-select").addEventListener("change", function(e) {
     state.lateFilter = e.target.value;
     updateMap();

@@ -1,0 +1,162 @@
+:root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --accent: #f093fb;
+    --bg: #f8fafc;
+    --text-main: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: transparent;
+    overflow: hidden;
+    color: var(--text-main);
+}
+
+.treemap-card-wrapper {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.treemap-card {
+    background: transparent;
+    border-radius: 0;
+    padding: 20px;
+    box-shadow: none;
+    border: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.treemap-card-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 20px 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--primary);
+}
+
+#treemap-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+}
+
+#treemap-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Styles des rectangles de la treemap */
+.treemap-rect {
+    stroke: white;
+    stroke-width: 2px;
+    cursor: pointer;
+    transition: opacity 0.3s, stroke-width 0.3s;
+}
+
+.treemap-rect:hover {
+    opacity: 0.8;
+    stroke-width: 3px;
+}
+
+/* Styles du texte */
+.treemap-text {
+    font-size: 12px;
+    font-weight: 600;
+    fill: white;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.treemap-text-category {
+    font-size: 14px;
+    font-weight: 700;
+    fill: #1e293b;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+.treemap-text-value {
+    font-size: 11px;
+    font-weight: 500;
+    fill: white;
+    opacity: 0.9;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* Tooltip */
+.tooltip {
+    position: fixed;
+    background: rgba(15, 23, 42, 0.95);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    max-width: 300px;
+    line-height: 1.6;
+}
+
+.tooltip.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tooltip-title {
+    font-weight: 700;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    font-size: 14px;
+}
+
+.tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    gap: 15px;
+}
+
+.tooltip-label {
+    color: rgba(255,255,255,0.8);
+}
+
+.tooltip-value {
+    font-weight: 600;
+}
+
+/* Couleurs pour les statuts */
+.status-late {
+    fill: #ef4444;
+}
+
+.status-ontime {
+    fill: #10b981;
+}
+
+/* Dégradés de couleurs par catégorie de distance */
+.distance-1 { opacity: 0.7; }
+.distance-2 { opacity: 0.8; }
+.distance-3 { opacity: 0.9; }
+.distance-4 { opacity: 1.0; }
