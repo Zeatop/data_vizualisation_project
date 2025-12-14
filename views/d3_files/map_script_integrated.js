@@ -346,6 +346,59 @@
       console.error("Error loading map data:", error);
     });
 
+  // Fonction pour mettre à jour les tooltips des villes selon la période
+  function updateCityTooltips(dataset) {
+    // Calculer les statistiques pour la période actuelle
+    const currentCityCounts = {};
+    const currentCityDepartures = {};
+    const currentCityArrivals = {};
+    
+    dataset.forEach(d => {
+      const flights = +d.flight_number || 0;
+      currentCityCounts[d.origin_city] = (currentCityCounts[d.origin_city] || 0) + flights;
+      currentCityCounts[d.dest_city] = (currentCityCounts[d.dest_city] || 0) + flights;
+      currentCityDepartures[d.origin_city] = (currentCityDepartures[d.origin_city] || 0) + flights;
+      currentCityArrivals[d.dest_city] = (currentCityArrivals[d.dest_city] || 0) + flights;
+    });
+
+    // Mettre à jour les tooltips
+    Object.keys(mapState.lookup).forEach(cityName => {
+      const departures = currentCityDepartures[cityName] || 0;
+      const arrivals = currentCityArrivals[cityName] || 0;
+      const total = currentCityCounts[cityName] || 0;
+      
+      // Ajouter l'information de période dans le tooltip
+      let periodInfo = "";
+      if (mapState.mode === "month") {
+        const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", 
+                            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+        periodInfo = monthNames[mapState.timeValue - 1];
+      } else if (mapState.mode === "week") {
+        periodInfo = `Semaine ${mapState.timeValue}`;
+      } else {
+        periodInfo = "Type de retard sélectionné";
+      }
+      
+      mapState.cityTooltips[cityName] = `
+        <div style="font-weight:600; margin-bottom:6px; border-bottom:1px solid #667eea; padding-bottom:4px;">
+          ${cityName}
+        </div>
+        <div style="font-size:12px; color:#666; margin-bottom:8px; font-style:italic;">
+          ${periodInfo}
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px;">
+          <span>Départs:</span> <strong>${departures.toLocaleString()}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:15px;">
+          <span>Arrivées:</span> <strong>${arrivals.toLocaleString()}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:15px; margin-top:4px; padding-top:4px; border-top:1px solid #667eea;">
+          <span>Total:</span> <strong>${total.toLocaleString()}</strong>
+        </div>
+      `;
+    });
+  }
+
   // 6. UPDATE MAP
   function updateMapView() {
     let dataset = [];
@@ -356,6 +409,9 @@
     } else {
       dataset = mapState.dataByLateType[mapState.lateFilter];
     }
+
+    // Recalculer les tooltips des villes pour la période actuelle
+    updateCityTooltips(dataset);
 
     let displayData = [];
 
