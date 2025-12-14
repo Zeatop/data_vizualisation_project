@@ -90,7 +90,7 @@ async function loadData() {
         });
 
         // Traiter les données par semaine
-        const weekGroups = d3.group(weekData, d => +d.week);
+        const weekGroups = d3.group(weekData, d => +d.week_number);
         weekGroups.forEach((rows, week) => {
             dataByWeek.set(week, processCarrierData(rows));
         });
