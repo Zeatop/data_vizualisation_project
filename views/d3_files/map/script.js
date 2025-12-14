@@ -20,7 +20,7 @@ const svg = d3.select("#map-wrapper")
 
 // Projection composite d3.geoAlbersUsa qui gère automatiquement les encarts
 const projection = d3.geoAlbersUsa()
-    .translate([width / 2, height / 2])
+    .translate([width / 2, height / 2 - 50])
     .scale(Math.min(width, height) * 1.6);
 
 const path = d3.geoPath().projection(projection);
@@ -137,7 +137,7 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
             .center([-2, 64])
             .parallels([55, 65])
             .scale(Math.min(width, height) * 0.35)
-            .translate([width * 0.15, height * 0.85]);
+            .translate([width * 0.15, height * 0.85 - 50]);
         
         const alaskaPath = d3.geoPath().projection(alaskaProjection);
         
@@ -151,7 +151,7 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
         const hawaiiProjection = d3.geoMercator()
             .center([-157, 20.5])
             .scale(Math.min(width, height) * 0.5)
-            .translate([width * 0.35, height * 0.88]);
+            .translate([width * 0.35, height * 0.88 - 20]);
         
         const hawaiiPath = d3.geoPath().projection(hawaiiProjection);
         
@@ -165,7 +165,7 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
         const puertoRicoProjection = d3.geoMercator()
             .center([-66.5, 18.2])
             .scale(Math.min(width, height) * 2)
-            .translate([width * 0.75, height * 0.88]);
+            .translate([width * 0.75, height * 0.88 - 20]);
         
         const puertoRicoPath = d3.geoPath().projection(puertoRicoProjection);
         
@@ -271,27 +271,48 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
             `;
         });
 
+        const maxCityCount = d3.max(Object.values(cityCounts)) || 1;
+
         const sizeScale = d3.scaleSqrt()
-            .domain([0, d3.max(Object.values(cityCounts))])
-            .range([3, 10]);
+            .domain([0, maxCityCount])
+            .range([3, 12]);
 
         const colorScale = d3.scaleSequential()
-            .domain([0, d3.max(Object.values(cityCounts))])
-            .interpolator(d3.interpolateRgb("#22c55e", "#ef4444"));
+            .domain([0, maxCityCount])
+            .interpolator(d3.interpolateBlues);
 
         gCities.selectAll("circle")
-            .data(cityGeo.features)
+            .data(cityGeo.features, d => d.properties.city)
             .enter().append("circle")
             .attr("class", "city-node")
-            .filter(d => {
+            .attr("r", d => {
                 const cityData = state.lookup[d.properties.city];
-                return cityData && cityData.projectedCoords;
+                if (!cityData || !cityData.projectedCoords) return 0;
+                const cityName = (d.properties.city || "").trim();
+                return sizeScale(cityCounts[cityName] || 0);
             })
-            .attr("r", d => sizeScale(cityCounts[d.properties.city] || 0))
-            .attr("fill", d => colorScale(cityCounts[d.properties.city] || 0))
+            .attr("fill", d => {
+                const cityData = state.lookup[d.properties.city];
+                if (!cityData || !cityData.projectedCoords) return "transparent";
+                const cityName = (d.properties.city || "").trim();
+                const count = cityCounts[cityName] || 0;
+                if (count === 0) return "#e0f2fe";
+                try {
+                    return colorScale(count);
+                } catch(e) {
+                    console.warn("ColorScale error for", d.properties.city, count, e);
+                    return "#001f3f";
+                }
+            })
             .attr("transform", d => {
                 const cityData = state.lookup[d.properties.city];
+                if (!cityData || !cityData.projectedCoords) return "translate(0,0)";
                 return `translate(${cityData.projectedCoords})`;
+            })
+            .attr("opacity", d => {
+                const cityData = state.lookup[d.properties.city];
+                if (!cityData || !cityData.projectedCoords) return 0;
+                return 1;
             })
             .on("click", d => selectCity(d.properties.city))
             .on("mouseover", function(d) {
@@ -302,14 +323,18 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
                 hideTooltip();
             });
 
-        const cityList = Object.keys(state.lookup).sort();
-        const select = document.getElementById("city-search");
-        if (select) {
-            cityList.forEach(city => {
+        // Peupler le dropdown de villes triées par volume de vols
+        const cityFilterSelect = document.getElementById("city-filter");
+        if (cityFilterSelect) {
+            const sortedCities = Object.keys(state.lookup)
+                .filter(cityName => cityCounts[cityName] > 0)
+                .sort((a, b) => cityCounts[b] - cityCounts[a]);
+            
+            sortedCities.forEach(city => {
                 const opt = document.createElement("option");
                 opt.value = city;
                 opt.textContent = city;
-                select.appendChild(opt);
+                cityFilterSelect.appendChild(opt);
             });
         }
 
@@ -326,25 +351,33 @@ Promise.all(files.map((url, i) => i < 2 ? d3.json(url) : d3.csv(url)))
             
             if (event.data.type === 'updateMapPeriod') {
                 const period = event.data.period; // 'month' or 'week'
-                const datasetSelect = document.getElementById('dataset-select');
-                if (datasetSelect && period) {
-                    datasetSelect.value = period;
+                if (period) {
                     state.mode = period;
                     
-                    const isLate = state.mode === "late";
-                    document.getElementById("time-controls").classList.toggle("hidden", isLate);
-                    document.getElementById("late-controls").classList.toggle("hidden", !isLate);
+                    const isMonth = state.mode === "month";
+                    const isWeek = state.mode === "week";
+                    
+                    document.getElementById("time-controls").classList.toggle("hidden", !isMonth);
+                    document.getElementById("week-controls").classList.toggle("hidden", !isWeek);
 
                     if (state.mode === "month") {
-                        document.getElementById("time-label").textContent = "MONTH";
-                        document.getElementById("time-slider").max = 12;
                         state.timeValue = Math.min(state.timeValue, 12);
-                        updateTimeDisplay();
+                        document.getElementById("time-select").value = state.timeValue;
                     } else if (state.mode === "week") {
-                        document.getElementById("time-label").textContent = "WEEK";
-                        document.getElementById("time-slider").max = 52;
-                        updateTimeDisplay();
+                        state.timeValue = Math.min(state.timeValue, 52);
+                        document.getElementById("week-select").value = state.timeValue;
                     }
+                    
+                    // Préserver la ville sélectionnée et les contrôles de direction
+                    if (state.selectedCity) {
+                        document.getElementById("direction-controls").classList.remove("hidden");
+                        document.getElementById("legend-directions").classList.remove("hidden");
+                        const cityFilterEl = document.getElementById("city-filter");
+                        if (cityFilterEl) {
+                            cityFilterEl.value = state.selectedCity;
+                        }
+                    }
+                    
                     updateMap();
                 }
             }
@@ -427,11 +460,7 @@ function updateMap() {
         const event = d3.event;
         const target = event.target;
         if (target.tagName === 'path') {
-            const d = d3.select(target).datum();
-            if (d) {
-                d3.select(target).attr("stroke-width", 4).attr("stroke", "#333");
-                showLinkTooltip(d, event.pageX, event.pageY);
-            }
+            d3.select(target).attr("stroke-width", 4).attr("stroke", "#333");
         }
     });
 
@@ -440,7 +469,6 @@ function updateMap() {
         const target = event.target;
         if (target.tagName === 'path') {
             d3.select(target).attr("stroke-width", null).attr("stroke", null);
-            hideTooltip();
         }
     });
 
@@ -464,21 +492,23 @@ function updateMap() {
 // 7. ACTIONS
 function selectCity(cityName) {
     state.selectedCity = cityName;
-    const citySearchEl = document.getElementById("city-search");
-    if (citySearchEl) {
-        citySearchEl.value = cityName;
+    const cityFilterEl = document.getElementById("city-filter");
+    if (cityFilterEl) {
+        cityFilterEl.value = cityName;
     }
     document.getElementById("direction-controls").classList.remove("hidden");
+    document.getElementById("legend-directions").classList.remove("hidden");
     updateMap();
 }
 
 function resetView() {
     state.selectedCity = null;
-    const citySearchEl = document.getElementById("city-search");
-    if (citySearchEl) {
-        citySearchEl.value = "";
+    const cityFilterEl = document.getElementById("city-filter");
+    if (cityFilterEl) {
+        cityFilterEl.value = "";
     }
     document.getElementById("direction-controls").classList.add("hidden");
+    document.getElementById("legend-directions").classList.add("hidden");
     state.direction = 'all';
     document.querySelector('input[name="direction"][value="all"]').checked = true;
     updateMap();
@@ -509,57 +539,24 @@ function hideTooltip() {
     tooltip.classed("hidden", true);
 }
 
-function updateTimeDisplay() {
-    const display = document.getElementById("time-display");
-    if (state.mode === "month") {
-        const date = new Date(2023, state.timeValue - 1, 1);
-        display.textContent = date.toLocaleString('default', { month: 'long' });
-    } else {
-        display.textContent = "Week " + state.timeValue;
-    }
-}
-
-function updateTimeDisplay() {
-    const display = document.getElementById("time-display");
-    if (state.mode === "month") {
-        const months = ["January","February","March","April","May","June",
-                       "July","August","September","October","November","December"];
-        display.textContent = months[state.timeValue - 1] || "January";
-    } else {
-        display.textContent = `Week ${state.timeValue}`;
-    }
-}
-
-
 // 8. EVENT LISTENERS
-document.getElementById("dataset-select").addEventListener("change", function(e) {
-    state.mode = e.target.value;
-    const isLate = state.mode === "late";
-    document.getElementById("time-controls").classList.toggle("hidden", isLate);
-    document.getElementById("late-controls").classList.toggle("hidden", !isLate);
-
-    if (state.mode === "month") {
-        document.getElementById("time-label").textContent = "MONTH";
-        const slider = document.getElementById("time-slider");
-        slider.max = 12;
-        slider.value = 1;
-        state.timeValue = 1;
-        document.getElementById("time-display").textContent = "January";
-    } else if (state.mode === "week") {
-        document.getElementById("time-label").textContent = "WEEK";
-        const slider = document.getElementById("time-slider");
-        slider.max = 52;
-        slider.value = 1;
-        state.timeValue = 1;
-        document.getElementById("time-display").textContent = "Week 1";
-    }
+document.getElementById("time-select").addEventListener("change", function(e) {
+    state.timeValue = +e.target.value;
     updateMap();
 });
 
-document.getElementById("time-slider").addEventListener("input", function(e) {
+document.getElementById("week-select").addEventListener("change", function(e) {
     state.timeValue = +e.target.value;
-    updateTimeDisplay();
     updateMap();
+});
+
+document.getElementById("city-filter").addEventListener("change", function(e) {
+    const cityName = e.target.value;
+    if (cityName === "") {
+        resetView();
+    } else {
+        selectCity(cityName);
+    }
 });
 
 document.getElementById("delay-select").addEventListener("change", function(e) {
